@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evergore Map Downloader
-// @version      0.1.1
-// @description  Passt die canvas Größe an und versteckt störende Layer, passt CSS an und fügt Buttons hinzu.
+// @version      0.1.2
+// @description  Passt die canvas Größe und CSS an, damit die ganze Karte dargestellt wird und versteckt störende Layer, damit ein Download möglich ist.
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=map
 // ==/UserScript==
@@ -93,9 +93,9 @@
         // Buttons creation
         const buttons = {
             startButton: createButton('Skript zum Herunterladen starten', 'start'),
-            endButton: createButton('Skript beenden', 'end'),
             openButton: createButton('Karte in neuem Tab öffnen', 'open'),
-            downloadButton: createButton('Karte herunterladen', 'download')
+            downloadButton: createButton('Karte herunterladen', 'download'),
+            endButton: createButton('Skript beenden', 'end')
         };
 
         // Initially hide buttons except "startButton"
