@@ -1,52 +1,53 @@
 // ==UserScript==
-// @name         Evergore Map Downloader
+// @name         Modify Evergore Map Canvas, CSS, Activate Checkboxes, Automate Zoom Interaction, and Add Buttons for Map Actions
+// @namespace    http://tampermonkey.net/
 // @version      0.1
-// @description  Passt die canvas Größe an und versteckt störende Layer, passt CSS an und fügt Buttons hinzu.
-// @author       mofte
+// @description  Adjust canvas size, hide unnecessary canvases, modify CSS, activate checkboxes, automate zoom actions, and add buttons for map actions
+// @author       You
 // @match        https://evergore.de/lenoran?page=map
+// @grant        none
 // ==/UserScript==
 
 (function() {
     'use strict';
 
-    // Function to activate specific checkboxes immediately and trigger the change event
+    // Helper function to style buttons uniformly
+    function styleButton(button) {
+        button.style.padding = '10px 20px';
+        button.style.cursor = 'pointer';
+        button.style.border = '1px solid #ccc';
+        button.style.borderRadius = '5px';
+        button.style.backgroundImage = 'url("https://evergore.de/skins/komo/gfx/th.png")';
+        button.style.backgroundSize = 'cover';
+        button.style.color = 'white'; // Text color on the background
+    }
+
+    // Function to activate specific checkboxes immediately
     function activateCheckboxes() {
-        const checkbox1 = document.querySelector('input[type="checkbox"][data-bit="1"]');
-        const checkbox6 = document.querySelector('input[type="checkbox"][data-bit="6"]');
+        const checkboxes = [
+            document.querySelector('input[type="checkbox"][data-bit="1"]'),
+            document.querySelector('input[type="checkbox"][data-bit="6"]')
+        ];
 
-        if (checkbox1) {
-            checkbox1.checked = true;
-            checkbox1.dispatchEvent(new Event('change'));
-        }
-
-        if (checkbox6) {
-            checkbox6.checked = true;
-            checkbox6.dispatchEvent(new Event('change'));
-        }
+        checkboxes.forEach(checkbox => {
+            if (checkbox) {
+                checkbox.checked = true;
+                checkbox.dispatchEvent(new Event('change'));
+            }
+        });
     }
 
     // Function to adjust canvas size and hide elements
     function adjustCanvas() {
-        const mapCanvas = document.getElementById('mapCanvas');
-        const veilCanvas = document.getElementById('veilCanvas');
-        const canvas = document.getElementById('canvas');
-
-        if (mapCanvas) {
-            mapCanvas.width = 2064;
-            mapCanvas.height = 2640;
-        }
-
-        if (veilCanvas) {
-            veilCanvas.width = 2064;
-            veilCanvas.height = 2640;
-            veilCanvas.style.display = 'none';
-        }
-
-        if (canvas) {
-            canvas.width = 2064;
-            canvas.height = 2640;
-            canvas.style.display = 'none';
-        }
+        const canvasElements = ['mapCanvas', 'veilCanvas', 'canvas'];
+        canvasElements.forEach(id => {
+            const canvas = document.getElementById(id);
+            if (canvas) {
+                canvas.width = 2064;
+                canvas.height = 2640;
+                canvas.style.display = (id === 'mapCanvas') ? 'block' : 'none'; // Only show mapCanvas
+            }
+        });
     }
 
     // Function to deactivate specific CSS properties
@@ -59,11 +60,9 @@
                     const rules = sheet.rules || sheet.cssRules;
                     for (let j = 0; j < rules.length; j++) {
                         const rule = rules[j];
-                        if (rule.style && rule.style.maxWidth === 'calc(100% - 170px)') {
-                            rule.style.maxWidth = '';
-                        }
-                        if (rule.style && rule.style.maxHeight === '550px') {
-                            rule.style.maxHeight = '';
+                        if (rule.style) {
+                            if (rule.style.maxWidth === 'calc(100% - 170px)') rule.style.maxWidth = '';
+                            if (rule.style.maxHeight === '550px') rule.style.maxHeight = '';
                         }
                     }
                 } catch (e) {
@@ -77,137 +76,99 @@
     function simulateZoom() {
         const mapDisplay = document.getElementById('mapDisplay');
         if (mapDisplay) {
-            const wheelEvent = new WheelEvent('wheel', {
-                deltaY: -100,
-                bubbles: true,
-                cancelable: true
-            });
-
-            mapDisplay.dispatchEvent(wheelEvent);
+            mapDisplay.dispatchEvent(new WheelEvent('wheel', { deltaY: -100, bubbles: true, cancelable: true }));
         }
     }
 
-    // Function to create and add the open map in new tab, download, and end script buttons
+    // Function to create and add the buttons
     function addButtons() {
+        const heading = document.querySelector('h1'); 
         const mapDisplayContainer = document.querySelector('#mapDisplay');
-        const heading = document.querySelector('h1');
+        if (!heading || !mapDisplayContainer) return; // Exit if elements are not found
 
-        if (heading && mapDisplayContainer) {
-            const buttonContainer = document.createElement('div');
-            buttonContainer.style.display = 'flex';
-            buttonContainer.style.marginTop = '10px';
-            buttonContainer.style.gap = '10px';
-            buttonContainer.style.justifyContent = 'center'; // Center the buttons
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.marginTop = '10px';
+        buttonContainer.style.gap = '10px';
+        buttonContainer.style.justifyContent = 'center'; // Center buttons
 
-            // Create the "Skript zum Herunterladen starten" button
-            const startButton = document.createElement('button');
-            startButton.innerHTML = 'Skript zum Herunterladen starten';
-            startButton.style.padding = '10px 20px';
-            startButton.style.cursor = 'pointer';
-            startButton.style.border = '1px solid #ccc';
-            startButton.style.borderRadius = '5px';
-            startButton.style.backgroundImage = 'url("https://evergore.de/skins/komo/gfx/th.png")';
-            startButton.style.backgroundSize = 'cover';
-            startButton.style.color = 'white'; // Text color on the background
+        // Buttons creation
+        const buttons = {
+            startButton: createButton('Skript zum Herunterladen starten', 'start'),
+            endButton: createButton('Skript beenden', 'end'),
+            openButton: createButton('Karte in neuem Tab öffnen', 'open'),
+            downloadButton: createButton('Karte herunterladen', 'download')
+        };
 
-            // Create the "Skript beenden" button (initially hidden)
-            const endButton = document.createElement('button');
-            endButton.innerHTML = 'Skript beenden';
-            endButton.style.padding = '10px 20px';
-            endButton.style.cursor = 'pointer';
-            endButton.style.border = '1px solid #ccc';
-            endButton.style.borderRadius = '5px';
-            endButton.style.backgroundImage = 'url("https://evergore.de/skins/komo/gfx/th.png")';
-            endButton.style.backgroundSize = 'cover';
-            endButton.style.color = 'white';
-            endButton.style.display = 'none'; // Hide initially
+        // Initially hide buttons except "startButton"
+        buttons.endButton.style.display = buttons.openButton.style.display = buttons.downloadButton.style.display = 'none';
 
-            // Create the "Karte in neuem Tab öffnen" button (initially hidden)
-            const openButton = document.createElement('button');
-            openButton.innerHTML = 'Karte in neuem Tab öffnen';
-            openButton.style.padding = '10px 20px';
-            openButton.style.cursor = 'pointer';
-            openButton.style.border = '1px solid #ccc';
-            openButton.style.borderRadius = '5px';
-            openButton.style.backgroundImage = 'url("https://evergore.de/skins/komo/gfx/th.png")';
-            openButton.style.backgroundSize = 'cover';
-            openButton.style.color = 'white'; // Text color on the background
-            openButton.style.display = 'none'; // Hide initially
+        // Append buttons to the container
+        Object.values(buttons).forEach(button => buttonContainer.appendChild(button));
 
-            // Create the "Karte herunterladen" button (initially hidden)
-            const downloadButton = document.createElement('button');
-            downloadButton.innerHTML = 'Karte herunterladen';
-            downloadButton.style.padding = '10px 20px';
-            downloadButton.style.cursor = 'pointer';
-            downloadButton.style.border = '1px solid #ccc';
-            downloadButton.style.borderRadius = '5px';
-            downloadButton.style.backgroundImage = 'url("https://evergore.de/skins/komo/gfx/th.png")';
-            downloadButton.style.backgroundSize = 'cover';
-            downloadButton.style.color = 'white'; // Text color on the background
-            downloadButton.style.display = 'none'; // Hide initially
+        heading.parentNode.insertBefore(buttonContainer, heading.nextSibling);
 
-            // Append all buttons to the container
-            buttonContainer.appendChild(startButton);
-            buttonContainer.appendChild(openButton);
-            buttonContainer.appendChild(downloadButton);
-            buttonContainer.appendChild(endButton); // Add the "Skript beenden" button here
+        // Event Listeners
+        buttons.startButton.addEventListener('click', onStartClick);
+        buttons.endButton.addEventListener('click', onEndClick);
+        buttons.openButton.addEventListener('click', onOpenClick);
+        buttons.downloadButton.addEventListener('click', onDownloadClick);
 
-            // Append the button container below the heading
-            heading.parentNode.insertBefore(buttonContainer, heading.nextSibling);
+        // Create button function
+        function createButton(text, type) {
+            const button = document.createElement('button');
+            button.innerHTML = text;
+            styleButton(button);
+            button.dataset.type = type;
+            return button;
+        }
 
-            // Add event listener for the "Skript zum Herunterladen starten" button
-            startButton.addEventListener('click', function() {
-                // Remove the start button after it is clicked
-                startButton.style.display = 'none';
+        // "Skript zum Herunterladen starten" click handler
+        function onStartClick() {
+            buttons.startButton.style.display = 'none';
+            activateCheckboxes();
 
-                // Now run the rest of the script
-                activateCheckboxes();
+            setTimeout(() => {
+                adjustCanvas();
+                deactivateCSS();
+                simulateZoom();
+                buttons.openButton.style.display = 'inline-block';
+                buttons.downloadButton.style.display = 'inline-block';
+                buttons.endButton.style.display = 'inline-block';
+            }, 1000);
+        }
 
-                setTimeout(function() {
-                    adjustCanvas();
-                    deactivateCSS();
-                    simulateZoom();
-                    openButton.style.display = 'inline-block'; // Show the "Karte in neuem Tab öffnen" button
-                    downloadButton.style.display = 'inline-block'; // Show the "Karte herunterladen" button
-                    endButton.style.display = 'inline-block'; // Show the "Skript beenden" button
-                }, 1000); // Wait a second before executing the rest of the script
-            });
+        // "Skript beenden" click handler (reload the page)
+        function onEndClick() {
+            window.location.reload();
+        }
 
-            // Add event listener for the "Skript beenden" button
-            endButton.addEventListener('click', function() {
-                // Reload the page to reset everything back to normal
-                window.location.reload();
-            });
+        // "Karte in neuem Tab öffnen" click handler
+        function onOpenClick() {
+            const mapCanvas = document.getElementById('mapCanvas');
+            if (mapCanvas) {
+                const imageUrl = mapCanvas.toDataURL('image/png');
+                const newTab = window.open();
+                newTab.document.body.innerHTML = `<img src="${imageUrl}" />`;
+            }
+        }
 
-            // Add event listener for the "Open Map in New Tab" button
-            openButton.addEventListener('click', function() {
-                const mapCanvas = document.getElementById('mapCanvas');
-                if (mapCanvas) {
-                    const imageUrl = mapCanvas.toDataURL('image/png');
-                    const newTab = window.open();
-                    newTab.document.body.innerHTML = `<img src="${imageUrl}" />`;
-                }
-            });
-
-            // Add event listener for the "Download Map" button
-            downloadButton.addEventListener('click', function() {
-                const mapCanvas = document.getElementById('mapCanvas');
-                if (mapCanvas) {
-                    const imageUrl = mapCanvas.toDataURL('image/png');
-                    const link = document.createElement('a');
-                    const today = new Date();
-                    const dateString = today.toISOString().split('T')[0]; // Format as YYYY-MM-DD
-                    link.href = imageUrl;
-                    link.download = `lenoran-karte-${dateString}.png`; // Set the download filename
-                    link.click();
-                }
-            });
+        // "Karte herunterladen" click handler
+        function onDownloadClick() {
+            const mapCanvas = document.getElementById('mapCanvas');
+            if (mapCanvas) {
+                const imageUrl = mapCanvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                const today = new Date();
+                const dateString = today.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+                link.href = imageUrl;
+                link.download = `lenoran-karte-${dateString}.png`;
+                link.click();
+            }
         }
     }
 
-    // Execute all functions as soon as possible after page load
-    window.addEventListener('load', function() {
-        addButtons(); // Initially add the "Skript zum Herunterladen starten" button
-    });
+    // Execute on page load
+    window.addEventListener('load', addButtons);
 
 })();
