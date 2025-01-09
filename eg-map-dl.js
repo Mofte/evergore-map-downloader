@@ -1,11 +1,9 @@
 // ==UserScript==
-// @name         Modify Evergore Map Canvas, CSS, Activate Checkboxes, Automate Zoom Interaction, and Add Buttons for Map Actions
-// @namespace    http://tampermonkey.net/
+// @name         Evergore Map Downloader
 // @version      0.1
-// @description  Adjust canvas size, hide unnecessary canvases, modify CSS, activate checkboxes, automate zoom actions, and add buttons for map actions
-// @author       You
+// @description  Passt die canvas Größe an und versteckt störende Layer, passt CSS an und fügt Buttons hinzu.
+// @author       mofte
 // @match        https://evergore.de/lenoran?page=map
-// @grant        none
 // ==/UserScript==
 
 (function() {
