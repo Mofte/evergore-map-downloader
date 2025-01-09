@@ -74,7 +74,7 @@
     function simulateZoom() {
         const mapDisplay = document.getElementById('mapDisplay');
         if (mapDisplay) {
-            mapDisplay.dispatchEvent(new WheelEvent('wheel', { deltaY: -100, bubbles: true, cancelable: true }));
+            mapDisplay.dispatchEvent(new WheelEvent('wheel', { deltaY: -100, deltaY: 100, bubbles: true, cancelable: true }));
         }
     }
 
