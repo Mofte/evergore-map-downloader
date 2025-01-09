@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Evergore Map Downloader
-// @version      0.1
+// @version      0.1.1
 // @description  Passt die canvas Größe an und versteckt störende Layer, passt CSS an und fügt Buttons hinzu.
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=map
