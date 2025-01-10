@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Evergore Map Downloader
-// @version      0.1.3a
+// @version      0.1.3b
 // @description  Passt die canvas Größe und CSS an, damit die ganze Karte dargestellt wird und versteckt störende Layer, damit ein Download möglich ist.
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=map
@@ -80,8 +80,7 @@
     function simulateZoom() {
         const mapDisplay = document.getElementById('mapDisplay');
         if (mapDisplay) {
-            mapDisplay.dispatchEvent(new WheelEvent('wheel', { deltaY: -100, deltaY: 100, bubbles: true, cancelable: true }));
-            mapDisplay.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, bubbles: true, cancelable: true }));
+            mapDisplay.dispatchEvent(new WheelEvent('wheel', { deltaY: -100, bubbles: true, cancelable: true }));
         }
     }
 
