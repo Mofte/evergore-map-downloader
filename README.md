@@ -1,6 +1,6 @@
 # Evergore Map Downloader
 
-Evergore Map Downloader ist ein Userscript, das es im [Browsergame Evergore](https://evergore.de/) ermöglicht die gesamte sichtbare Karte herunterzuladen. 
+Evergore Map Downloader ist ein Userscript, das es im [Browsergame Evergore](https://evergore.de/) ermöglicht, die gesamte sichtbare Karte herunterzuladen. 
 
 ## Was ist das Problem?
 In früheren Welten war das in den meisten Browsern über einen einfachen Rechtsklick möglich. In der aktuellen Welt Lenoran wurde die Karte allerdings überarbeitet (und hübscher gemacht) und offensichtlich auch die Art, wie die Karte in die Seite eingebunden wird geändert, so dass die einfache Variante nicht mehr funktioniert. Mit der alten Variante wird nur ein Layer gespeichert, der den aktuellen Standort und die geplante Route anzeigt, die auf transparenten Hintergrund liegt.
