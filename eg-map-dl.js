@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Evergore Map Downloader
-// @version      0.1.2a
+// @version      0.1.3
 // @description  Passt die canvas Größe und CSS an, damit die ganze Karte dargestellt wird und versteckt störende Layer, damit ein Download möglich ist.
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=map
@@ -38,17 +38,22 @@
 
     // Function to adjust canvas size and hide elements
     function adjustCanvas() {
-        const canvasElements = ['mapCanvas', 'veilCanvas', 'canvas'];
-        canvasElements.forEach(id => {
-            const canvas = document.getElementById(id);
-            if (canvas) {
-                canvas.width = 2064;
-                canvas.height = 2640;
-                canvas.style.display = (id === 'mapCanvas') ? 'block' : 'none'; // Only show mapCanvas
-            }
-        });
+        const mapDisplay = document.getElementById('mapDisplay');
+        if (mapDisplay) {
+            const divWidth = parseInt(mapDisplay.style.width); // Extract numeric value from mapDisplay width
+            const divHeight = parseInt(mapDisplay.style.height); // Extract numeric value from mapDisplay height
+        
+            const canvasElements = ['mapCanvas', 'veilCanvas', 'canvas'];
+            canvasElements.forEach(id => {
+                const canvas = document.getElementById(id);
+                if (canvas) {
+                    canvas.width = divWidth; // Set width based on mapDisplay
+                    canvas.height = divHeight; // Set height based on mapDisplay;
+                    canvas.style.display = (id === 'mapCanvas') ? 'block' : 'none'; // Only show mapCanvas
+                }
+            });
+        }
     }
-
     // Function to deactivate specific CSS properties
     function deactivateCSS() {
         const styleSheets = document.styleSheets;
