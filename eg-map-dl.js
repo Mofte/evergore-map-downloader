@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Evergore Map Downloader
-// @version      0.1.2
+// @version      0.1.2a
 // @description  Passt die canvas Größe und CSS an, damit die ganze Karte dargestellt wird und versteckt störende Layer, damit ein Download möglich ist.
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=map
@@ -17,7 +17,8 @@
         button.style.borderRadius = '5px';
         button.style.backgroundImage = 'url("https://evergore.de/skins/komo/gfx/th.png")';
         button.style.backgroundSize = 'cover';
-        button.style.color = 'white'; // Text color on the background
+        button.style.color = 'black'; // Text color on the background
+        button.style.fontWeight  = 'bold'; 
     }
 
     // Function to activate specific checkboxes immediately
