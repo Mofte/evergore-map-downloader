@@ -46,7 +46,7 @@ Die ersten beiden sind zur Vereinfachung, da der Aufbau der Seite durch das Skri
 Ich bin bisher recht angetan von dem Skript, lasse das noch von Haudrauf absegnen und werde dann noch einen Wiki-Artikel dazu verfassen, und es dann auf Version 1.0 setzen. (Falls jemand bis hierher gelesen hat:) Ich freue mich über Feedback, sei es zu Funktionen, die noch sinnig wären, oder zum Inhalt/Aufbau des Codes, der wie gesagt überwiegend durch KI erzeugt wurde. Ein paar TODOs habe ich unten schon aufgelistet, ich nehme aber gerne noch mehr dazu.
 
 ## TODO
-- Sicherstellen, dass die width und height-Werte des div konstant sind und sich nicht ändern. Ggf. nicht mit absoluten Werten arbeiten.
+- ~~Sicherstellen, dass die width und height-Werte des div konstant sind und sich nicht ändern. Ggf. nicht mit absoluten Werten arbeiten.~~
 - Feld zum ein- und ausblenden der Feldstufen
 - simulateZoom zoomt nur raus, prüfen, ob sich hierdurch der Kartenausschnitt ungünstig ändert
 - Reihenfolge in der onStartClick Funktion und Timeout notwendig?
