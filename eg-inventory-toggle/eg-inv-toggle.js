@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Evergore Inventarbeschreibungen ausklappen
-// @version      0.1
+// @version      0.2
 // @description  Adds a button to toggle all accordion sections in Evergore's inventory page
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=inventory
@@ -34,8 +34,21 @@
             let isExpanded = false;
 
             button.addEventListener('click', () => {
-                // Alle <section class="accordion">-Elemente finden
+                // Die Akkordeon-Elemente werden erst nach dem ersten Klick aktiviert
                 const accordions = document.querySelectorAll('section.accordion');
+
+                // Wenn es das erste Mal ist, dass der Button geklickt wird
+                if (accordions.length > 0) {
+                    accordions.forEach(accordion => {
+                        const content = accordion.querySelector('.content');
+                        if (content) {
+                            // Startet den ersten Klick und macht die Elemente umschaltbar
+                            content.style.transition = 'height 0.3s'; // Optional: sanfte Übergänge
+                        }
+                    });
+                }
+
+                // Alle <section class="accordion">-Elemente finden und umschalten
                 if (isExpanded) {
                     // Bei erneutem Klick: height auf 0 setzen (Einklappen)
                     accordions.forEach(accordion => {
