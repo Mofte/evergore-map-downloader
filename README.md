@@ -48,5 +48,5 @@ Ich bin bisher recht angetan von dem Skript, lasse das noch von Haudrauf absegne
 ## TODO
 - ~~Sicherstellen, dass die width und height-Werte des div konstant sind und sich nicht ändern. Ggf. nicht mit absoluten Werten arbeiten.~~
 - Feld zum ein- und ausblenden der Feldstufen
-- simulateZoom zoomt nur raus, prüfen, ob sich hierdurch der Kartenausschnitt ungünstig ändert
+- ~~simulateZoom zoomt nur raus, prüfen, ob sich hierdurch der Kartenausschnitt ungünstig ändert~~
 - Reihenfolge in der onStartClick Funktion und Timeout notwendig?
