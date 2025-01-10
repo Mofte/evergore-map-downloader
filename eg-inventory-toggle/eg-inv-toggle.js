@@ -27,7 +27,7 @@
         const header = document.querySelector('h1');  // Die Überschrift "Inventar" finden
         if (header) {
             const button = document.createElement('button');
-            button.textContent = 'Aus-/einklappen';
+            button.textContent = 'Alle umschalten';
             styleButton(button); // Button im gleichen Stil wie im anderen Skript
 
             // Flag zur Überwachung des Zustands (ausgeklappt oder eingeklappt)
