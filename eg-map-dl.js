@@ -93,6 +93,7 @@
         const buttonContainer = document.createElement('div');
         buttonContainer.style.display = 'flex';
         buttonContainer.style.marginTop = '10px';
+        buttonContainer.style.marginBottom = '10px';
         buttonContainer.style.gap = '10px';
         buttonContainer.style.justifyContent = 'center'; // Center buttons
 
