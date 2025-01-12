@@ -18,7 +18,12 @@
         button.style.backgroundImage = 'url("https://evergore.de/skins/komo/gfx/th.png")';
         button.style.backgroundSize = 'cover';
         button.style.color = 'black'; // Text color on the background
-        button.style.fontWeight  = 'bold'; 
+        button.style.fontWeight  = 'bold';
+    }
+    // Function to get character name from the navigation header
+    function getCharacterName() {
+        const navHeader = document.querySelector('#nav2 h2');
+        return navHeader ? navHeader.textContent.trim().replace(/\s+/g, '_') : 'unbekannt';
     }
 
     // Function to activate specific checkboxes immediately
@@ -42,7 +47,7 @@
         if (mapDisplay) {
             const divWidth = parseInt(mapDisplay.style.width); // Extract numeric value from mapDisplay width
             const divHeight = parseInt(mapDisplay.style.height); // Extract numeric value from mapDisplay height
-        
+
             const canvasElements = ['mapCanvas', 'veilCanvas', 'canvas'];
             canvasElements.forEach(id => {
                 const canvas = document.getElementById(id);
@@ -86,7 +91,7 @@
 
     // Function to create and add the buttons
     function addButtons() {
-        const heading = document.querySelector('h1'); 
+        const heading = document.querySelector('h1');
         const mapDisplayContainer = document.querySelector('#mapDisplay');
         if (!heading || !mapDisplayContainer) return; // Exit if elements are not found
 
@@ -162,12 +167,13 @@
         function onDownloadClick() {
             const mapCanvas = document.getElementById('mapCanvas');
             if (mapCanvas) {
+                const characterName = getCharacterName();
                 const imageUrl = mapCanvas.toDataURL('image/png');
                 const link = document.createElement('a');
                 const today = new Date();
                 const dateString = today.toISOString().split('T')[0]; // Format as YYYY-MM-DD
                 link.href = imageUrl;
-                link.download = `lenoran-karte-${dateString}.png`;
+                link.download = `Lenoran-Karte-${characterName}-${dateString}.png`;
                 link.click();
             }
         }
