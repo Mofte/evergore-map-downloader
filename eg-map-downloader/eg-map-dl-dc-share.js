@@ -9,7 +9,7 @@
 (function() {
     'use strict';
 
-    const webhookUrl = 'https://discord.com/api/webhooks/1328057171786596463/M0DOu6vVBFgbNeR3D6sjgvBR1xIkRTDBJZs6qkZDnFsaziCbA6bPON7I9S3nMBQ89Jlr'; // Discord Webhook URL hier einfügen
+    const webhookUrl = 'YOUR_DISCORD_WEBHOOK_URL'; // Discord Webhook URL hier einfügen
 
     // Helper function to style buttons uniformly
     function styleButton(button) {
