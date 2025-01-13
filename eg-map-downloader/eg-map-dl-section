@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Evergore Map Downloader mit Ausschnittsauwwahl
-// @version      0.1
+// @version      0.1a
 // @description  Passt die Canvas-Größe und CSS an, ermöglicht die Auswahl eines Kartenausschnitts und Download der Karte.
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=map
@@ -168,8 +168,7 @@
         // Button-Funktionen
         startButton.addEventListener('click', () => {
             startButton.style.display = 'none';
-            dropdown.style.display = 'inline-block';
-            activateCheckboxes();
+                        activateCheckboxes();
             setTimeout(() => {
                 adjustCanvas();
                 deactivateCSS();
@@ -177,6 +176,7 @@
                 openButton.style.display = 'inline-block';
                 downloadButton.style.display = 'inline-block';
                 endButton.style.display = 'inline-block';
+                dropdown.style.display = 'inline-block';
             }, 1000);
         });
 
@@ -242,10 +242,10 @@
         // Funktion: Kürzel basierend auf Auswahl ermitteln
         function getSelectionPrefix(selection) {
             switch (selection) {
-                case 'top-left': return 'ol-';
-                case 'top-right': return 'or-';
-                case 'bottom-left': return 'ul-';
-                case 'bottom-right': return 'ur-';
+                case 'top-left': return 'OL-';
+                case 'top-right': return 'OR-';
+                case 'bottom-left': return 'UL-';
+                case 'bottom-right': return 'UR-';
                 default: return '';
             }
         }
