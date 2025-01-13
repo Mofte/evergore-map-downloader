@@ -1,0 +1,143 @@
+// ==UserScript==
+// @name         Einfacher Karten-Downloader für Evergore
+// @version      0.1
+// @description  Passt die Karte an, aktiviert Checkboxen, lädt sie herunter und ermöglicht das manuelle Beenden des Skripts durch einen Button.
+// @author       mofte
+// @match        https://evergore.de/lenoran?page=map
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // Funktion zur Anpassung der Canvas-Größe
+    function adjustCanvas() {
+        const mapDisplay = document.getElementById('mapDisplay');
+        if (mapDisplay) {
+            const divWidth = parseInt(mapDisplay.style.width);
+            const divHeight = parseInt(mapDisplay.style.height);
+
+            const canvasElements = ['mapCanvas', 'veilCanvas', 'canvas'];
+            canvasElements.forEach(id => {
+                const canvas = document.getElementById(id);
+                if (canvas) {
+                    canvas.width = divWidth;
+                    canvas.height = divHeight;
+                    canvas.style.display = id === 'mapCanvas' ? 'block' : 'none'; // Nur mapCanvas anzeigen
+                }
+            });
+        }
+    }
+
+    // Funktion zur Deaktivierung spezifischer CSS-Eigenschaften
+    function deactivateCSS() {
+        const styleSheets = document.styleSheets;
+        for (let i = 0; i < styleSheets.length; i++) {
+            const sheet = styleSheets[i];
+            if (sheet.href && sheet.href.includes("https://evergore.de/skins/komo/scoped.css")) {
+                try {
+                    const rules = sheet.rules || sheet.cssRules;
+                    for (let j = 0; j < rules.length; j++) {
+                        const rule = rules[j];
+                        if (rule.style) {
+                            if (rule.style.maxWidth === 'calc(100% - 170px)') rule.style.maxWidth = '';
+                            if (rule.style.maxHeight === '550px') rule.style.maxHeight = '';
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error modifying scoped CSS:", e);
+                }
+            }
+        }
+    }
+
+    // Funktion, um einen Maus-Zoom zu simulieren
+    function simulateZoom() {
+        const mapDisplay = document.getElementById('mapDisplay');
+        if (mapDisplay) {
+            mapDisplay.dispatchEvent(new WheelEvent('wheel', { deltaY: -100, bubbles: true, cancelable: true }));
+            mapDisplay.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, bubbles: true, cancelable: true }));
+        }
+    }
+
+    // Funktion, um den Charakter-Namen zu holen
+    function getCharacterName() {
+        const navHeader = document.querySelector('#nav2 h2');
+        return navHeader ? navHeader.textContent.trim().replace(/\s+/g, '_') : 'unbekannt';
+    }
+
+    // Funktion zur Aktivierung spezifischer Checkboxen
+    function activateCheckboxes() {
+        const checkboxes = [
+            document.querySelector('input[type="checkbox"][data-bit="1"]'),
+            document.querySelector('input[type="checkbox"][data-bit="6"]')
+        ];
+
+        checkboxes.forEach(checkbox => {
+            if (checkbox) {
+                checkbox.checked = true;
+                checkbox.dispatchEvent(new Event('change'));
+            }
+        });
+    }
+
+    // Funktion, um die Karte herunterzuladen
+    function downloadMap(button) {
+        activateCheckboxes(); // Checkboxen aktivieren
+        adjustCanvas();
+        deactivateCSS();
+        simulateZoom();
+
+        // 0,25 Sekunden warten, um der Karte Zeit zum Neuzeichnen zu geben
+        setTimeout(() => {
+            const mapCanvas = document.getElementById('mapCanvas');
+            if (mapCanvas) {
+                const imageUrl = mapCanvas.toDataURL('image/png');
+                const characterName = getCharacterName();
+                const today = new Date();
+                const dateString = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
+                // Karte herunterladen
+                const link = document.createElement('a');
+                link.href = imageUrl;
+                link.download = `Lenoran-Karte-${characterName}-${dateString}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                // Button zu "Skript beenden" ändern
+                button.textContent = 'Skript beenden';
+                button.removeEventListener('click', downloadMap); // Vorherigen Listener entfernen
+                button.addEventListener('click', () => window.location.reload()); // Neuladen der Seite
+            } else {
+                alert("Fehler: mapCanvas wurde nicht gefunden.");
+            }
+        }, 250); // Wartezeit auf 0,25 Sekunden
+    }
+
+    // Button erstellen und zur Seite hinzufügen
+    function createDownloadButton() {
+        const heading = document.querySelector('h1');
+        if (!heading) return;
+
+        const button = document.createElement('button');
+        button.textContent = 'Karte herunterladen';
+        button.style.padding = '10px 20px';
+        button.style.cursor = 'pointer';
+        button.style.border = '1px solid #ccc';
+        button.style.borderRadius = '5px';
+        button.style.backgroundColor = '#4CAF50';
+        button.style.color = 'white';
+        button.style.fontWeight = 'bold';
+        button.style.marginTop = '10px';
+
+        // Klick-Ereignis für den Button
+        button.addEventListener('click', () => downloadMap(button));
+
+        // Button einfügen
+        heading.parentNode.insertBefore(button, heading.nextSibling);
+    }
+
+    // Skript starten, wenn die Seite geladen ist
+    window.addEventListener('load', createDownloadButton);
+
+})();
