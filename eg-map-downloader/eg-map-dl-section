@@ -1,0 +1,264 @@
+// ==UserScript==
+// @name         Evergore Map Downloader mit Ausschnittsauwwahl
+// @version      0.1
+// @description  Passt die Canvas-Größe und CSS an, ermöglicht die Auswahl eines Kartenausschnitts und Download der Karte.
+// @author       mofte
+// @match        https://evergore.de/lenoran?page=map
+// ==/UserScript==
+
+(function () {
+    'use strict';
+
+    // Hilfsfunktion: Schaltflächen einheitlich stylen
+    function styleButton(button) {
+        button.style.padding = '10px 20px';
+        button.style.cursor = 'pointer';
+        button.style.border = '1px solid #ccc';
+        button.style.borderRadius = '5px';
+        button.style.backgroundImage = 'url("https://evergore.de/skins/komo/gfx/th.png")';
+        button.style.backgroundSize = 'cover';
+        button.style.color = 'black';
+        button.style.fontWeight = 'bold';
+        button.style.textAlign = 'center';
+    }
+
+    // Hilfsfunktion: Dropdown-Menü einheitlich stylen
+    function styleDropdown(select) {
+        select.style.padding = '10px 20px';
+        select.style.border = '1px solid #ccc';
+        select.style.borderRadius = '5px';
+        select.style.backgroundImage = 'url("https://evergore.de/skins/komo/gfx/th.png")';
+        select.style.backgroundSize = 'cover';
+        select.style.color = 'black';
+        select.style.fontWeight = 'bold';
+        select.style.textAlign = 'center';
+        select.style.marginBottom = '10px';
+        select.style.appearance = 'menulist'; // Fügt den Pfeil hinzu
+        select.style.display = 'none'; // Initial versteckt
+    }
+
+    // Funktion: Canvas zuschneiden
+    function cropCanvas(originalCanvas, x, y, width, height) {
+        const croppedCanvas = document.createElement('canvas');
+        croppedCanvas.width = width;
+        croppedCanvas.height = height;
+
+        const context = croppedCanvas.getContext('2d');
+        context.drawImage(originalCanvas, x, y, width, height, 0, 0, width, height);
+
+        return croppedCanvas;
+    }
+
+    // Funktion: Charaktername auslesen
+    function getCharacterName() {
+        const navHeader = document.querySelector('#nav2 h2');
+        return navHeader ? navHeader.textContent.trim().replace(/\s+/g, '_') : 'unbekannt';
+    }
+
+    // Funktion: Checkboxen aktivieren
+    function activateCheckboxes() {
+        const checkboxes = [
+            document.querySelector('input[type="checkbox"][data-bit="1"]'),
+            document.querySelector('input[type="checkbox"][data-bit="6"]')
+        ];
+
+        checkboxes.forEach(checkbox => {
+            if (checkbox) {
+                checkbox.checked = true;
+                checkbox.dispatchEvent(new Event('change'));
+            }
+        });
+    }
+
+    // Funktion: Canvas-Größe anpassen und störende Elemente ausblenden
+    function adjustCanvas() {
+        const mapDisplay = document.getElementById('mapDisplay');
+        if (mapDisplay) {
+            const divWidth = parseInt(mapDisplay.style.width);
+            const divHeight = parseInt(mapDisplay.style.height);
+
+            const canvasElements = ['mapCanvas', 'veilCanvas', 'canvas'];
+            canvasElements.forEach(id => {
+                const canvas = document.getElementById(id);
+                if (canvas) {
+                    canvas.width = divWidth;
+                    canvas.height = divHeight;
+                    canvas.style.display = (id === 'mapCanvas') ? 'block' : 'none';
+                }
+            });
+        }
+    }
+
+    // Funktion: CSS-Eigenschaften deaktivieren
+    function deactivateCSS() {
+        const styleSheets = document.styleSheets;
+        for (let i = 0; i < styleSheets.length; i++) {
+            const sheet = styleSheets[i];
+            if (sheet.href && sheet.href.includes("https://evergore.de/skins/komo/scoped.css")) {
+                try {
+                    const rules = sheet.rules || sheet.cssRules;
+                    for (let j = 0; j < rules.length; j++) {
+                        const rule = rules[j];
+                        if (rule.style) {
+                            if (rule.style.maxWidth === 'calc(100% - 170px)') rule.style.maxWidth = '';
+                            if (rule.style.maxHeight === '550px') rule.style.maxHeight = '';
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error modifying scoped CSS:", e);
+                }
+            }
+        }
+    }
+
+    // Funktion: Maus-Rad-Zoom simulieren
+    function simulateZoom() {
+        const mapDisplay = document.getElementById('mapDisplay');
+        if (mapDisplay) {
+            mapDisplay.dispatchEvent(new WheelEvent('wheel', { deltaY: -100, bubbles: true, cancelable: true }));
+            mapDisplay.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, bubbles: true, cancelable: true }));
+        }
+    }
+
+    // Funktion: Buttons und Dropdown-Menü hinzufügen
+    function addButtons() {
+        const heading = document.querySelector('h1');
+        const mapDisplayContainer = document.querySelector('#mapDisplay');
+        if (!heading || !mapDisplayContainer) return;
+
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.justifyContent = 'center';
+        buttonContainer.style.gap = '10px';
+        buttonContainer.style.marginTop = '10px';
+
+        // Dropdown für die Auswahl des Ausschnitts
+        const dropdownContainer = document.createElement('div');
+        dropdownContainer.style.textAlign = 'center';
+        const dropdown = document.createElement('select');
+        dropdown.innerHTML = `
+            <option value="full">Gesamte Karte</option>
+            <option value="top-left">Oben links</option>
+            <option value="top-right">Oben rechts</option>
+            <option value="bottom-left">Unten links</option>
+            <option value="bottom-right">Unten rechts</option>
+        `;
+        styleDropdown(dropdown);
+        dropdownContainer.appendChild(dropdown);
+
+        // Buttons erstellen
+        const startButton = createButton('Skript zum Herunterladen starten');
+        const openButton = createButton('Karte in neuem Tab öffnen');
+        const downloadButton = createButton('Karte herunterladen');
+        const endButton = createButton('Skript beenden');
+
+        // Buttons initialisieren
+        openButton.style.display = 'none';
+        downloadButton.style.display = 'none';
+        endButton.style.display = 'none';
+
+        // Dropdown-Menü und Buttons einfügen
+        heading.parentNode.insertBefore(dropdownContainer, heading.nextSibling);
+        heading.parentNode.insertBefore(buttonContainer, dropdownContainer.nextSibling);
+        buttonContainer.appendChild(startButton);
+        buttonContainer.appendChild(openButton);
+        buttonContainer.appendChild(downloadButton);
+        buttonContainer.appendChild(endButton);
+
+        // Button-Funktionen
+        startButton.addEventListener('click', () => {
+            startButton.style.display = 'none';
+            dropdown.style.display = 'inline-block';
+            activateCheckboxes();
+            setTimeout(() => {
+                adjustCanvas();
+                deactivateCSS();
+                simulateZoom();
+                openButton.style.display = 'inline-block';
+                downloadButton.style.display = 'inline-block';
+                endButton.style.display = 'inline-block';
+            }, 1000);
+        });
+
+        endButton.addEventListener('click', () => {
+            window.location.reload();
+        });
+
+        openButton.addEventListener('click', () => {
+            const mapCanvas = document.getElementById('mapCanvas');
+            if (mapCanvas) {
+                const croppedCanvas = cropMapCanvas(mapCanvas, dropdown.value);
+                const imageUrl = croppedCanvas.toDataURL('image/png');
+                const newTab = window.open();
+                newTab.document.body.innerHTML = `<img src="${imageUrl}" />`;
+            }
+        });
+
+        downloadButton.addEventListener('click', () => {
+            const mapCanvas = document.getElementById('mapCanvas');
+            if (mapCanvas) {
+                const croppedCanvas = cropMapCanvas(mapCanvas, dropdown.value);
+                const imageUrl = croppedCanvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                const characterName = getCharacterName();
+                const today = new Date().toISOString().split('T')[0];
+                const prefix = getSelectionPrefix(dropdown.value);
+                link.href = imageUrl;
+                link.download = `Lenoran-Karte-${prefix}${characterName}-${today}.png`;
+                link.click();
+            }
+        });
+
+        // Funktion: Canvas zuschneiden basierend auf Auswahl
+        function cropMapCanvas(canvas, selection) {
+            let x = 0, y = 0, width = canvas.width, height = canvas.height;
+
+            switch (selection) {
+                case 'top-left':
+                    width /= 2;
+                    height /= 2;
+                    break;
+                case 'top-right':
+                    x = width / 2;
+                    width /= 2;
+                    height /= 2;
+                    break;
+                case 'bottom-left':
+                    y = height / 2;
+                    width /= 2;
+                    height /= 2;
+                    break;
+                case 'bottom-right':
+                    x = width / 2;
+                    y = height / 2;
+                    width /= 2;
+                    height /= 2;
+                    break;
+            }
+
+            return cropCanvas(canvas, x, y, width, height);
+        }
+
+        // Funktion: Kürzel basierend auf Auswahl ermitteln
+        function getSelectionPrefix(selection) {
+            switch (selection) {
+                case 'top-left': return 'ol-';
+                case 'top-right': return 'or-';
+                case 'bottom-left': return 'ul-';
+                case 'bottom-right': return 'ur-';
+                default: return '';
+            }
+        }
+
+        // Button erstellen
+        function createButton(text) {
+            const button = document.createElement('button');
+            button.textContent = text;
+            styleButton(button);
+            return button;
+        }
+    }
+
+    // Skript initialisieren
+    window.addEventListener('load', addButtons);
+})();
