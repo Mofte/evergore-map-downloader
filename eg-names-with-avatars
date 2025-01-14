@@ -2,11 +2,12 @@
 // @name          Avatareinblendungen
 // @description   Zeigt die Avatare in der Gruppen- und Gildenübersicht neben den jeweiligen Namen an
 // @author        mofte
-// @version       0.5
+// @version       0.6
 // @match         https://evergore.de/lenoran?page=group_info
+// @match         https://evergore.de/lenoran?page=guild_organisation
 // ==/UserScript==
 
-
+(function() {
     'use strict';
 
     // Funktion zum Laden der Avatare für jeden Helden
@@ -42,12 +43,12 @@
                         const cellHeight = cell.offsetHeight; // Höhe der Zelle
                         imgElement.style.height = `${cellHeight}px`; // Bild an Zellenhöhe anpassen
                         imgElement.style.width = `${cellHeight}px`; // Breite an Zellenhöhe anpassen
-                        imgElement.style.objectFit = 'cover';
-                        imgElement.style.objectPosition = 'top';
+                        imgElement.style.objectFit = 'cover'; // Bild auf Zellenhöhe zuschneiden und zentrieren
+                        imgElement.style.objectPosition = 'top'; // Fokussiere den oberen Teil des Bildes
                         imgElement.style.verticalAlign = 'middle';
 
                         cell.style.display = 'flex';
-                        cell.style.alignItems = 'center';
+                        cell.style.alignItems = '';
 
                         cell.prepend(imgElement); // Füge das Bild vor den Link ein
                     }
