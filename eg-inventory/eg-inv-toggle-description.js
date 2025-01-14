@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Evergore Inventarbeschreibungen ausklappen
-// @version      0.2
+// @version      0.2a
 // @description  Adds a button to toggle all accordion sections in Evergore's inventory page
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=inventory
@@ -11,7 +11,7 @@
 
     // Helper function to style buttons uniformly (aus dem anderen Skript übernommen)
     function styleButton(button) {
-        button.style.padding = '10px 20px';
+        button.style.padding = '5px 10px';
         button.style.cursor = 'pointer';
         button.style.border = '1px solid #ccc';
         button.style.borderRadius = '5px';
