@@ -1,12 +1,12 @@
 // ==UserScript==
-// @name          Jagdgruppenavatare
-// @description   Zeigt die Avatare aus der Jagdgruppe in der Gruppenübersicht an
+// @name          Avatareinblendungen
+// @description   Zeigt die Avatare in der Gruppen- und Gildenübersicht neben den jeweiligen Namen an
 // @author        mofte
-// @version       0.4
+// @version       0.5
 // @match         https://evergore.de/lenoran?page=group_info
 // ==/UserScript==
 
-(function() {
+
     'use strict';
 
     // Funktion zum Laden der Avatare für jeden Helden
@@ -41,7 +41,9 @@
                     if (cell) {
                         const cellHeight = cell.offsetHeight; // Höhe der Zelle
                         imgElement.style.height = `${cellHeight}px`; // Bild an Zellenhöhe anpassen
-                        imgElement.style.width = 'auto'; // Breite proportional zur Höhe anpassen
+                        imgElement.style.width = `${cellHeight}px`; // Breite an Zellenhöhe anpassen
+                        imgElement.style.objectFit = 'cover';
+                        imgElement.style.objectPosition = 'top';
                         imgElement.style.verticalAlign = 'middle';
 
                         cell.style.display = 'flex';
