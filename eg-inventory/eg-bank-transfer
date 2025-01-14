@@ -1,0 +1,87 @@
+// ==UserScript==
+// @name         Evergore Bank Transfer
+// @namespace    https://evergore.de/
+// @version      0.1
+// @description  Fügt einen Button hinzu, um alle Rohstoffe, Handwerksmaterialien und Gold zwischen Bank und Inventar zu transferieren.
+// @author       mofte
+// @match        https://evergore.de/lenoran?page=bank
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // Funktion zum Stylen des Buttons
+    function styleButton(button) {
+        button.style.padding = '10px 20px';
+        button.style.cursor = 'pointer';
+        button.style.border = '1px solid #ccc';
+        button.style.borderRadius = '5px';
+        button.style.backgroundImage = 'url("https://evergore.de/skins/komo/gfx/th.png")';
+        button.style.backgroundSize = 'cover';
+        button.style.color = 'black'; // Textfarbe auf dem Hintergrund
+        button.style.fontWeight = 'bold';
+    }
+
+    // Button erstellen
+    const button = document.createElement('button');
+    button.textContent = 'Rohstoffe, Handwerksmaterialien und Gold transferieren';
+    styleButton(button);
+
+    // Funktion für Button-Klick
+    button.addEventListener('click', () => {
+        const rows = document.querySelectorAll('tr'); // Alle Zeilen in der Tabelle
+        let found = false;
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+
+            // Prüfen, ob die Zeile Rohstoffe oder Handwerksmaterialien enthält
+            if (text.includes('rohstoff') || text.includes('handwerksmaterial')) {
+                const input = row.querySelector('input[type="number"]');
+                if (input) {
+                    input.value = 9999; // Wert setzen
+                    found = true;
+                    console.log('Rohstoff/Handwerksmaterial gefunden, Wert gesetzt auf 9999.');
+                }
+            }
+        });
+
+        // Setze bankgold und herogold auf 99999
+        const bankgoldInput = document.querySelector('input[name="bankgold"]');
+        const herogoldInput = document.querySelector('input[name="herogold"]');
+
+        if (bankgoldInput) {
+            bankgoldInput.value = 99999;
+            console.log('Bankgold auf 99999 gesetzt.');
+        } else {
+            console.error('Kein Bankgold-Feld gefunden.');
+        }
+
+        if (herogoldInput) {
+            herogoldInput.value = 99999;
+            console.log('Herogold auf 99999 gesetzt.');
+        } else {
+            console.error('Kein Herogold-Feld gefunden.');
+        }
+
+        // Wenn Rohstoffe oder Handwerksmaterialien gefunden wurden, Bankgold und Herogold übertragen
+        if (found) {
+            // Klick auf den "Durchführen"-Button auslösen
+            const executeButton = document.querySelector('button[type="submit"], input[type="submit"]');
+            if (executeButton) {
+                executeButton.click();
+                console.log('Transfer abgeschlossen, "Durchführen"-Button geklickt.');
+            } else {
+                console.error('Kein Durchführen-Button gefunden.');
+            }
+        } else {
+            alert('Keine passenden Rohstoffe oder Handwerksmaterialien gefunden.');
+        }
+    });
+
+    // Button unter der Überschrift hinzufügen
+    const header = document.querySelector('h1');
+    if (header) {
+        header.parentNode.insertBefore(button, header.nextSibling);
+    }
+})();
