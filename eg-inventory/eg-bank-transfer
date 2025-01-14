@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evergore Bank Transfer
 // @namespace    https://evergore.de/
-// @version      0.2
+// @version      0.2a
 // @description  Fügt zwei Button hinzu, um Rohstoffe, Handwerksmaterialien und Gold komplett in das Inventar bzw. in die Bank zu transferieren.
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=bank
@@ -17,6 +17,7 @@
         button.style.border = '1px solid #ccc';
         button.style.borderRadius = '5px';
         button.style.margin = '5px';
+        button.style.marginBottom = '20px';
         button.style.backgroundImage = 'url("https://evergore.de/skins/komo/gfx/th.png")';
         button.style.backgroundSize = 'cover';
         button.style.color = 'black'; // Textfarbe auf dem Hintergrund
@@ -128,11 +129,11 @@
         }
     });
 
-    // Buttons und Beschreibung einfügen
-    const header = document.querySelector('h1');
-    if (header) {
-        header.parentNode.insertBefore(description, header.nextSibling);
-        header.parentNode.insertBefore(toInventoryButton, description.nextSibling);
-        header.parentNode.insertBefore(toBankButton, toInventoryButton.nextSibling);
+    // Text und Buttons vor dem Formular einfügen
+    const bankForm = document.querySelector('form[name="bankform"]');
+    if (bankForm) {
+        bankForm.parentNode.insertBefore(description, bankForm);
+        bankForm.parentNode.insertBefore(toInventoryButton, description.nextSibling);
+        bankForm.parentNode.insertBefore(toBankButton, toInventoryButton.nextSibling);
     }
 })();
