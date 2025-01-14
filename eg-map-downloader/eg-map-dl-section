@@ -20,6 +20,7 @@
         button.style.color = 'black';
         button.style.fontWeight = 'bold';
         button.style.textAlign = 'center';
+        button.style.marginBottom = '10px';
     }
 
     // Hilfsfunktion: Dropdown-Menü einheitlich stylen
