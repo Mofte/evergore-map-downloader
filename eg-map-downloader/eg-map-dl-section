@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Evergore Map Downloader mit Ausschnittsauwwahl
-// @version      0.2
+// @version      0.2a
 // @description  Passt die Canvas-Größe und CSS an, ermöglicht die Auswahl eines Kartenausschnitts und Download der Karte.
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=map
@@ -11,7 +11,7 @@
 
     // Hilfsfunktion: Schaltflächen einheitlich stylen
     function styleButton(button) {
-        button.style.padding = '10px 20px';
+        button.style.padding = '5px 10px';
         button.style.cursor = 'pointer';
         button.style.border = '1px solid #ccc';
         button.style.borderRadius = '5px';
@@ -20,12 +20,12 @@
         button.style.color = 'black';
         button.style.fontWeight = 'bold';
         button.style.textAlign = 'center';
-        button.style.marginBottom = '10px';
+        button.style.marginBottom ='10px';
     }
 
     // Hilfsfunktion: Dropdown-Menü einheitlich stylen
     function styleDropdown(select) {
-        select.style.padding = '10px 20px';
+        select.style.padding = '5px 10px';
         select.style.border = '1px solid #ccc';
         select.style.borderRadius = '5px';
         select.style.backgroundImage = 'url("https://evergore.de/skins/komo/gfx/th.png")';
@@ -69,6 +69,25 @@
                 checkbox.dispatchEvent(new Event('change'));
             }
         });
+    }
+
+    // Funktion zum Ersetzen des Inhalts des Hilfetextes
+    function replaceHelpContent() {
+        const helpElement = document.querySelector('p.help');
+        if (helpElement) {
+            helpElement.innerHTML = `
+                <u>Infos zum Skript</u><br>
+                Das Skript ändert nur ein paar Variablen an der Darstellung der Karte, damit man all das, was man bereits erkundet hat, in ganzer Pracht sehen und vor allem auch herunterladen kann.<br>
+                Die Buttons oben ermöglichen die Anzeige in einem neuen Tab, wo die Karte leichter angeschaut und auch heruntergeladen werden kann, den Download der ganzen Karte mit dem Dateinamen "Lenoran-Karte-$name-§datum.png" und das Beenden des Skripts, was ganz simpel über ein Neuladen der Seite funktioniert.<br>
+                Auf GitHub gibt es mehr Infos zu diesem und anderen Userscripts von mir: <a href='https://github.com/Mofte/evergore-userscripts' title='Evergore Userscripts auf GitHub'><u><b>Evergore Userscripts</b></u></a><br>
+                Viel Spaß mit dem Skript,<br>
+                Mofte (Rhogg)
+            `;
+
+            // Formatierung im Blocksatz
+            helpElement.style.textAlign = 'justify';
+            helpElement.style.hyphens = 'auto';
+        }
     }
 
     // Funktion: Canvas-Größe anpassen und störende Elemente ausblenden
@@ -175,6 +194,7 @@
                 adjustCanvas();
                 deactivateCSS();
                 simulateZoom();
+                replaceHelpContent();
 
                 setTimeout(() => {
                   // Das mapDisplay div ausblenden
@@ -211,7 +231,7 @@
                     }
                 }, 100);
 
-                // Anzeigen der restlichen Buttons und Dropdown-Menü
+                // Anzeigen der restlichen Buttons und Dropdown-Menü und Ersetzen des Infotextes
                 openButton.style.display = 'inline-block';
                 downloadButton.style.display = 'inline-block';
                 endButton.style.display = 'inline-block';
