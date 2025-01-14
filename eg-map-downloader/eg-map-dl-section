@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Evergore Map Downloader mit Ausschnittsauwwahl
-// @version      0.1a
+// @version      0.2
 // @description  Passt die Canvas-Größe und CSS an, ermöglicht die Auswahl eines Kartenausschnitts und Download der Karte.
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=map
@@ -166,18 +166,56 @@
         buttonContainer.appendChild(endButton);
 
         // Button-Funktionen
-        startButton.addEventListener('click', () => {
+                startButton.addEventListener('click', () => {
             startButton.style.display = 'none';
-                        activateCheckboxes();
+            activateCheckboxes();
+
             setTimeout(() => {
                 adjustCanvas();
                 deactivateCSS();
                 simulateZoom();
+
+                setTimeout(() => {
+                  // Das mapDisplay div ausblenden
+                  const mapDisplay = document.getElementById('mapDisplay');
+                  const mapControl = document.getElementById('mapControl');
+                  const mapMenu = document.getElementById('mapMenu');
+                  if (mapDisplay, mapControl, mapMenu) {
+                      mapDisplay.style.display = mapControl.style.display = mapMenu.style.display = 'none'; // Altinhalt ausblenden
+                  }
+
+                  // Die neue Karte erzeugen
+                  const mapCanvas = document.getElementById('mapCanvas');
+                  if (mapCanvas) {
+                      const croppedCanvas = cropMapCanvas(mapCanvas, dropdown.value);
+                      const imageUrl = croppedCanvas.toDataURL('image/png');
+
+                      // Eine neue Karte erstellen und ins mapDisplay einfügen
+                      const newImage = new Image();
+                      newImage.src = imageUrl;
+                      newImage.style.width = '100%'; // Höhe der neuen Karte festlegen
+
+                      // Die neue Karte in das mapDisplay div einfügen
+                      const newMapDisplay = document.createElement('div');
+                      newMapDisplay.style.textAlign = 'center';
+                      newMapDisplay.appendChild(newImage);
+
+                      if (mapControl) {
+                          mapControl.parentNode.insertBefore(newImage, mapControl);
+                      }
+
+                      // Das alte mapDisplay durch das neue ersetzen
+                      const parentDiv = mapDisplay.parentNode;
+                      parentDiv.appendChild(newMapDisplay);
+                    }
+                }, 100);
+
+                // Anzeigen der restlichen Buttons und Dropdown-Menü
                 openButton.style.display = 'inline-block';
                 downloadButton.style.display = 'inline-block';
                 endButton.style.display = 'inline-block';
                 dropdown.style.display = 'inline-block';
-            }, 1000);
+            }, 100);
         });
 
         endButton.addEventListener('click', () => {
