@@ -1,0 +1,75 @@
+// ==UserScript==
+// @name          Jagdgruppenavatare
+// @description   Zeigt die Avatare aus der Jagdgruppe in der Gruppenübersicht an
+// @author        mofte
+// @version       0.4
+// @match         https://evergore.de/lenoran?page=group_info
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // Funktion zum Laden der Avatare für jeden Helden
+    function insertHeroImageInCell(heroLink) {
+        const heroId = heroLink.href.split('hero_id=')[1]; // Extrahiere die Hero-ID
+        const heroPageUrl = `https://evergore.de/lenoran?page=info_hero&hero_id=${heroId}`;
+
+        fetch(heroPageUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Fehler beim Abrufen der Seite: ${response.statusText}`);
+                }
+                return response.text();
+            })
+            .then(data => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(data, 'text/html');
+
+                // Suche nach dem Avatar-Element
+                const avatarElement = doc.querySelector('img.cpic');
+                if (avatarElement) {
+                    const avatarUrl = avatarElement.src; // URL des Avatars
+
+                    // Erstelle das Avatar-Bild
+                    const imgElement = document.createElement('img');
+                    imgElement.src = avatarUrl;
+                    imgElement.style.display = 'block';
+                    imgElement.style.marginRight = '10px';
+
+                    // Füge das Avatar-Bild an den Anfang der Zelle ein
+                    const cell = heroLink.closest('td'); // Gehe zur Zelle des Links
+                    if (cell) {
+                        const cellHeight = cell.offsetHeight; // Höhe der Zelle
+                        imgElement.style.height = `${cellHeight}px`; // Bild an Zellenhöhe anpassen
+                        imgElement.style.width = 'auto'; // Breite proportional zur Höhe anpassen
+                        imgElement.style.verticalAlign = 'middle';
+
+                        cell.style.display = 'flex';
+                        cell.style.alignItems = 'center';
+
+                        cell.prepend(imgElement); // Füge das Bild vor den Link ein
+                    }
+                }
+            })
+            .catch(error => {
+                console.error(`Fehler beim Abrufen der Heldenseite für Held ID ${heroId}:`, error);
+            });
+    }
+
+    // Funktion zum Durchlaufen der Links in der Gruppenübersicht
+    function processTableLinks() {
+        const heroLinks = document.querySelectorAll('a[href*="page=info_hero&hero_id="]');
+        if (heroLinks.length === 0) {
+            return;
+        }
+
+        heroLinks.forEach(heroLink => {
+            setTimeout(() => insertHeroImageInCell(heroLink), 100); // Kleine Verzögerung zwischen den Abrufen
+        });
+    }
+
+    // Warte auf das Laden der Seite und rufe dann die Funktion auf
+    window.addEventListener('load', () => {
+        processTableLinks();
+    });
+})();
