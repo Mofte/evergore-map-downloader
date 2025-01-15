@@ -1,0 +1,130 @@
+// ==UserScript==
+// @name         Evergore Kampfberichte filtern
+// @description  Fügt dem Gruppenbericht einen Button hinzu, um nur Kämpfe anzuzeigen und kompakt darzustellen und 
+// @version      0.1
+// @author       mofte
+// @match        https://evergore.de/lenoran?page=msg_view*
+// @grant        none
+// ==/UserScript==
+
+(function () {
+    'use strict';
+
+    // Überprüfen, ob "Kampfereignis beendet." auf der Seite existiert
+    if (document.body.innerHTML.includes("Kampfereignis beendet.")) {
+        // Spielername extrahieren
+        const nav2Div = document.getElementById('nav2');
+        const playerName = nav2Div ? nav2Div.querySelector('h2')?.textContent.trim() : null;
+
+        // Button erstellen
+        const filterButton = document.createElement("button");
+        filterButton.textContent = "Kampfberichte filtern";
+        filterButton.className = "btn"; // Gleiche CSS-Klasse wie der Löschen-Button
+        filterButton.style.marginLeft = "10px"; // Etwas Abstand hinzufügen
+
+        // Button neben den Löschen-Button einfügen
+        const deleteButton = document.querySelector('input[value="Löschen"]');
+        if (deleteButton) {
+            deleteButton.parentNode.appendChild(filterButton);
+        }
+
+        // Klick-Event für den Button
+        filterButton.addEventListener("click", async () => {
+            const paragraphs = document.querySelectorAll("p");
+            let battleCount = 0; // Zähler für Kampfberichte
+            let winCount = 0; // Zähler für gewonnene Kämpfe
+            const formattedLines = [];
+
+            for (let p of paragraphs) {
+                // Nur <p>-Tags mit "<b>Gruppenmitglieder</b>" am Anfang verarbeiten
+                if (p.innerHTML.startsWith("<b>Gruppenmitglieder</b>")) {
+                    const lines = p.innerHTML.split("<br>");
+                    const filteredLines = lines.filter((line) =>
+                        line.includes('<a href="?page=battle_report')
+                    );
+
+                    battleCount += filteredLines.length;
+
+                    for (let line of filteredLines) {
+                        let beforeLink = "";
+                        let link = "";
+
+                        // Extrahiere den Link
+                        const linkMatch = line.match(/<a href="\?page=battle_report.*?<\/a>/);
+                        if (linkMatch) {
+                            link = linkMatch[0];
+                        }
+
+                        // Suche nach Text vor dem Link
+                        const beforeMatch = p.innerHTML.split(link)[0].split("<b>").pop();
+                        if (beforeMatch) {
+                            beforeLink = beforeMatch.trim().replace(/<br>/g, ' | ');
+                            beforeLink = beforeLink.slice(0, -1);
+                        }
+
+                        const [beforeDate] = beforeLink.split(" | ");
+
+                        // Rekonstruiere die Zeile
+                        const fullLink = "https://evergore.de/lenoran" + link.match(/href="(.*?)"/)[1];
+
+                        // Überprüfe den Kampfstatus
+                        const result = await checkBattleResult(fullLink, playerName);
+                        if (result === "Kampf gewonnen!") winCount++;
+
+                        const formattedResult = result === "Kampf verloren!"
+                            ? `<span style="background-color: darkred; color: white; padding: 2px; border-radius: 4px;">${result}</span>`
+                            : result;
+
+                        formattedLines.push(`${beforeDate} | ${formattedResult} | ${link}`);
+                    }
+
+                    // Kampfbericht-Zusammenfassung erstellen
+                    const winText = winCount === battleCount ? "alle" : winCount.toString();
+                    p.innerHTML = `<b>${battleCount} Kämpfe, davon ${winText} gewonnen</b><br><br>` + formattedLines.join("<br><br>");
+                }
+            }
+        });
+    }
+
+    // Funktion, die den Kampfstatus prüft
+    async function checkBattleResult(url, playerName) {
+        try {
+            // Dekodiere die URL
+            const decodedUrl = url.replace(/&amp;/g, "&");
+
+            // HTML-Inhalt der Seite abrufen
+            const response = await fetch(decodedUrl);
+            const text = await response.text();
+
+            // Teilnehmernummer für den Spieler aus `setParticipant` finden
+            const participantMatch = [...text.matchAll(/setParticipant\((.*?)\);/g)].find(match => {
+                const args = match[1].split(",");
+                const participantName = args[1].replace(/["']/g, "").trim();
+                return participantName === playerName;
+            });
+
+            if (!participantMatch) {
+                console.error("Teilnehmernummer für den Spieler nicht gefunden.");
+                return "Kampfstatus konnte nicht ermittelt werden.";
+            }
+
+            // Teilnehmernummer extrahieren
+            const participantNumber = participantMatch[1].split(",")[2].trim();
+
+            // Gewinner überprüfen
+            const winnerMatch = text.match(/winner\((\d+)\);/);
+            if (!winnerMatch) {
+                console.error("Keine Gewinnernummer gefunden.");
+                return "Kampfstatus konnte nicht ermittelt werden.";
+            }
+
+            // Gewinnernummer überprüfen
+            const winnerNumber = winnerMatch[1];
+            return participantNumber === winnerNumber ? "Kampf gewonnen!" : "Kampf verloren!";
+        } catch (error) {
+            console.error("Fehler beim Abrufen oder Verarbeiten des Kampfberichts:", error);
+            return "Kampfstatus konnte nicht ermittelt werden.";
+        }
+    }
+
+})();
