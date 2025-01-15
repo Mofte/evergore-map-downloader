@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evergore Kampfberichte filtern
-// @description  Fügt dem Gruppenbericht einen Button hinzu, um nur Kämpfe anzuzeigen und kompakt darzustellen und 
-// @version      0.2
+// @description  Fügt dem Gruppenbericht einen Button hinzu, um nur Kämpfe anzuzeigen und kompakt darzustellen und
+// @version      0.3
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=msg_view*
 // @grant        none
@@ -60,7 +60,7 @@
                             if (result === "Kampf gewonnen!") winCount++;
 
                             if (plans && plans.length > 0) {
-                                plans.forEach(plan => allPlans.add(plan));
+                                plans.forEach(plan => allPlans.add({ plan, link: fullLink }));
                             }
 
                             if (beforeDay && beforeTime) {
@@ -71,7 +71,7 @@
 
                     const winText = winCount === battleCount ? "alle" : winCount.toString();
                     const plansText = allPlans.size > 0
-                        ? `<br><br><b>Gefundene Pläne:</b> ${Array.from(allPlans).join(", ")}`
+                        ? `<br><br><b>Gefundene Pläne:</b> ${Array.from(allPlans).map(item => `<a href="${item.link}">${item.plan}</a>`).join(", ")}`
                         : "";
 
                     p.innerHTML = `<b>${battleCount} Kämpfe, davon ${winText} gewonnen</b>${plansText}<br><br>` + formattedLines.join("<br><br>");
