@@ -1,0 +1,114 @@
+// ==UserScript==
+// @name         Gildenrangliste nach Gesamtstufe
+// @version      0.1
+// @description  Ändert in der Gildenrangliste in allen Welten die Gesamtpunkte in Gesamtstufe und sortiert die Tabelle danach
+// @author       mofte
+// @match        https://evergore.de/*?page=ranking_guild
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // Funktion, um Level von einer Seite zu extrahieren
+    function extractLevelFromPage(url, row) {
+        return new Promise((resolve, reject) => {
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        reject("Fehler beim Laden der Seite.");
+                        return;
+                    }
+                    return response.text();
+                })
+                .then(html => {
+
+                    // RegEx um alle Level-Werte innerhalb der 2. Tabelle zu finden
+                    let levelMatches = []; // Array zur Speicherung der Level-Werte
+                    let levelRegex = /Level (\d{1,2})/g;
+                    let match;
+
+                    // Suche nach Leveln nur in der 2. Tabelle
+                    let tables = html.split('<table'); // Aufteilen der HTML-Seite nach Tabellen
+                    if (tables.length > 2) {
+                        let secondTable = tables[2]; // Die 2. Tabelle (Index 2 nach Aufteilen)
+                        while ((match = levelRegex.exec(secondTable)) !== null) {
+                            levelMatches.push(parseInt(match[1]));  // Speichert alle Level-Werte
+                        }
+                    }
+
+                    if (levelMatches.length === 0) {
+                        reject("Keine Level in der 2. Tabelle gefunden.");
+                        return;
+                    }
+
+                    // Berechne die Summe der Level
+                    let totalLevel = levelMatches.reduce((sum, level) => sum + level, 0);
+
+                    // Jetzt wird die Zelle in der Tabelle gefunden und aktualisiert
+                    let totalPointsCell = row.querySelector('td:last-child');
+                    if (totalPointsCell) {
+                        totalPointsCell.textContent = totalLevel;  // Setze die Summe in die letzte Zelle
+                    }
+
+                    resolve(totalLevel); // Promise aufgelöst, wenn alles fertig ist
+                })
+                .catch(() => reject("Fehler beim Laden der Seite."));
+        });
+    }
+
+    // Finde die 4. Tabelle auf der Seite (Index 3)
+    let tables = document.querySelectorAll('table');
+    if (tables.length > 3) {  // Sicherstellen, dass es mindestens 3 Tabellen gibt
+        let guildTable = tables[3]; // Die 3. Tabelle ist Index 3
+
+        // Iteriere über jede Zeile der Tabelle und hole die Links in der zweiten Spalte
+        let rows = guildTable.querySelectorAll('tbody tr');
+        let promises = [];  // Array, um alle Promises zu sammeln
+        let rowData = [];
+
+        rows.forEach((row) => {
+            let link = row.querySelector('td a');
+            if (link) {
+                let guildUrl = link.href;
+
+                // Extrahiere Level von der Gildenseite
+                let promise = extractLevelFromPage(guildUrl, row).then(totalLevel => {
+                    rowData.push({ row, totalLevel });
+                });
+
+                promises.push(promise);  // Promise zu unserem Array hinzufügen
+            }
+        });
+
+        // Nachdem alle Promises abgearbeitet sind, sortieren wir und aktualisieren die Tabelle
+        Promise.all(promises).then(() => {
+            // Nach der Iteration nach Gesamtstufe absteigend sortieren
+            rowData.sort((a, b) => b.totalLevel - a.totalLevel);
+
+            // Die Zeilen in der Tabelle neu anordnen
+            let tbody = guildTable.querySelector('tbody');
+            rowData.forEach(item => {
+                tbody.appendChild(item.row);  // Reihenfolge der Zeilen gemäß totalLevel anpassen
+            });
+
+            // Die Nummerierung in der ersten Spalte von 1 an neu setzen
+            rowData.forEach((item, index) => {
+                let firstColumnCell = item.row.querySelector('td:first-child');
+                if (firstColumnCell) {
+                    let originalContent = firstColumnCell.innerHTML.trim();  // Behalte den ursprünglichen Inhalt der Zelle
+                    // Setze den neuen Nummerierungstext mit Beibehaltung der Formatierung
+                    firstColumnCell.innerHTML = originalContent.replace(/\d+/, index + 1);  // Ersetze nur die Zahl
+                }
+            });
+
+            // Überschrift ändern
+            let headerRow = guildTable.querySelector('tr');
+            if (headerRow) {
+                let headerCells = headerRow.querySelectorAll('th');
+                if (headerCells.length > 3) {
+                    headerCells[3].textContent = 'Gesamtstufe';  // Ändere den Text der 4. Spalte
+                }
+            }
+        });
+    }
+})();
