@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         Evergore Kampfberichte filtern
-// @description  Fügt dem Gruppenbericht einen Button hinzu, um nur Kämpfe anzuzeigen und kompakt darzustellen und
-// @version      0.3
+// @name         Evergore Gruppenbericht filtern
+// @description  Fügt dem Gruppenbericht einen Button hinzu, um nur Kämpfe und gefunden Pläne anzuzeigen
+// @version      0.4
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=msg_view*
 // @grant        none
@@ -25,6 +25,9 @@
         }
 
         filterButton.addEventListener("click", async () => {
+            filterButton.remove(); // Entferne den Filter-Button nach Klick
+            createResetButton(); // Erstelle den Zurücksetzen-Button
+
             const paragraphs = document.querySelectorAll("p");
             let battleCount = 0;
             let winCount = 0;
@@ -56,7 +59,7 @@
                             const beforeTime = beforeParts[0]?.split(" ")[0]?.trim(); // Uhrzeit
                             const beforeDay = beforeParts[0]?.match(/\((.*?)\)/)?.[1]?.trim(); // Wochentag
 
-                            const { result, plans } = await checkBattleResult(fullLink, playerName);
+                            const { result, plans, estimatedRounds } = await checkBattleResult(fullLink, playerName);
                             if (result === "Kampf gewonnen!") winCount++;
 
                             if (plans && plans.length > 0) {
@@ -64,7 +67,9 @@
                             }
 
                             if (beforeDay && beforeTime) {
-                                formattedLines.push(`${beforeDay} | ${beforeTime} | ${result} | ${linkMatch[0]}`);
+                                // Füge die geschätzte Rundenanzahl hinzu
+                                const roundText = estimatedRounds ? ` ${estimatedRounds} ${estimatedRounds === 1 ? "Runde" : "Runden"}` : "";
+                                formattedLines.push(`${beforeDay} | ${beforeTime} | ${result} | ${roundText} | ${linkMatch[0]}`);
                             }
                         }
                     }
@@ -78,6 +83,22 @@
                 }
             }
         });
+
+        function createResetButton() {
+            const resetButton = document.createElement("button");
+            resetButton.textContent = "Zurücksetzen";
+            resetButton.className = "btn";
+            resetButton.style.marginLeft = "10px";
+
+            resetButton.addEventListener("click", () => {
+                location.reload(); // Seite neu laden
+            });
+
+            const deleteButtonParent = document.querySelector('input[value="Löschen"]')?.parentNode;
+            if (deleteButtonParent) {
+                deleteButtonParent.appendChild(resetButton);
+            }
+        }
     }
 
     async function checkBattleResult(url, playerName) {
@@ -94,14 +115,14 @@
 
             if (!participantMatch) {
                 console.error("Teilnehmernummer für den Spieler nicht gefunden.");
-                return { result: "Kampfstatus konnte nicht ermittelt werden.", plans: [] };
+                return { result: "Kampfstatus konnte nicht ermittelt werden.", plans: [], estimatedRounds: null };
             }
 
             const participantNumber = participantMatch[1].split(",")[2].trim();
             const winnerMatch = text.match(/winner\((\d+)\);/);
             if (!winnerMatch) {
                 console.error("Keine Gewinnernummer gefunden.");
-                return { result: "Kampfstatus konnte nicht ermittelt werden.", plans: [] };
+                return { result: "Kampfstatus konnte nicht ermittelt werden.", plans: [], estimatedRounds: null };
             }
 
             const winnerNumber = winnerMatch[1];
@@ -112,10 +133,16 @@
                 .map(match => match[1].split(",")[1]?.replace(/["']/g, "").trim())
                 .filter(item => item && item.includes("(Plan)"));
 
-            return { result, plans };
+            // Suche nach der letzten Instanz von unconcious() und bestimme die Rundenanzahl
+            const lastUnconciousMatch = [...text.matchAll(/unconcious\((\d+),/g)].pop();
+            const estimatedRounds = lastUnconciousMatch
+                ? Math.ceil(parseInt(lastUnconciousMatch[1]) / 24) // Teile durch 24 und runde auf
+                : null;
+
+            return { result, plans, estimatedRounds };
         } catch (error) {
             console.error("Fehler beim Abrufen oder Verarbeiten des Kampfberichts:", error);
-            return { result: "Kampfstatus konnte nicht ermittelt werden.", plans: [] };
+            return { result: "Kampfstatus konnte nicht ermittelt werden.", plans: [], estimatedRounds: null };
         }
     }
 })();
