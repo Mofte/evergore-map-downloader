@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evergore Gruppenbericht filtern
 // @description  Fügt dem Gruppenbericht einen Button hinzu, um nur Kämpfe und gefundene Pläne anzuzeigen
-// @version      0.6
+// @version      0.6a
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=msg_view*
 // @grant        none
@@ -86,7 +86,10 @@
 
                 const timestamp = extractTimestamp(p.innerHTML, linkMatch[0]);
                 const roundText = estimatedRounds ? ` ${estimatedRounds} ${estimatedRounds === 1 ? "Runde" : "Runden"}` : "";
-                formattedLines.push(`${timestamp} | ${result} | ${roundText} | ${linkMatch[0]}`);
+                const resultStyled = result === "Kampf verloren!"
+                    ? `<span style="background-color: red; padding: 2px 4px; border-radius: 4px;">${result}</span>`
+                    : result;
+                formattedLines.push(`${timestamp} | ${resultStyled} | ${roundText} | ${linkMatch[0]}`);
             }
 
             const winText = winCount === battleCount ? "alle" : winCount.toString();
