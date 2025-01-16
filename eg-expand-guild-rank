@@ -1,0 +1,157 @@
+// ==UserScript==
+// @name         Gildenrangliste erweitern
+// @namespace    https://evergore.de/
+// @version      0.1
+// @description  Ergänzt die Gildenrangliste automatisch um alle weiteren Ränge ab Seite 2
+// @author       mofte
+// @match        https://evergore.de/*?page=ranking_guild*
+// ==/UserScript==
+
+(function () {
+    'use strict';
+
+    // Funktion, um das Formular zu entfernen
+    function removeForm() {
+        const form = document.querySelector('form[action=""]');
+        if (form) {
+            form.remove();
+            console.log('Formular wurde entfernt.');
+        }
+    }
+
+    // Funktion, um eine Seite per Fetch zu laden
+    async function fetchPage(pos) {
+        // Ermittelt den aktuellen Pfad (z. B. /zyrthania oder /lenoran) aus der URL
+        const currentPath = window.location.pathname.split('/')[1]; // Zweiter Teil des Pfads
+        const url = `https://evergore.de/${currentPath}?page=ranking_guild&pos=${pos}`;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                console.error(`Fehler beim Laden der Seite: ${url}`);
+                return null;
+            }
+            const html = await response.text();
+            const parser = new DOMParser();
+            return parser.parseFromString(html, 'text/html');
+        } catch (error) {
+            console.error(`Fehler beim Abrufen der Seite ${url}:`, error);
+            return null;
+        }
+    }
+
+    // Setze `addedRanks` auf die ersten 20 Ränge nach dem Aufruf der ersten Seite
+    let addedRanks = new Set(["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"]);
+    console.log("Initialisierte Ränge:", Array.from(addedRanks));
+
+    // Funktion, um die Ränge aus der vierten Tabelle zu extrahieren
+    function extractRanks(doc) {
+        const tables = doc.querySelectorAll('table');
+        const targetTable = tables[3]; // 4. Tabelle auf der Seite
+        if (!targetTable) {
+            console.error('Vierte Tabelle wurde nicht gefunden.');
+            return [];
+        }
+
+        const rows = targetTable.querySelectorAll('tbody tr');
+        if (rows.length <= 1) { // Keine Datenzeilen vorhanden
+            return [];
+        }
+
+        // Überspringe die Kopfzeile und extrahiere die Daten
+        return Array.from(rows)
+            .slice(1) // Kopfzeile überspringen
+            .map(row => {
+                const rank = row.querySelector('td:first-child').textContent.trim(); // Erste Zelle für Rangnummer
+                return { rowHTML: row.outerHTML.trim(), rank };
+            });
+    }
+
+    // Funktion, um die neuen Ränge in die Haupttabelle (4. Tabelle) einzufügen
+    function appendRanksToTable(rows) {
+        const tables = document.querySelectorAll('table');
+        const mainTable = tables[2]?.querySelector('tbody'); // 4. Tabelle auf der Hauptseite, nach Entfernen des Formulars
+        if (!mainTable) {
+            console.error('Haupttabelle nicht gefunden.');
+            return;
+        }
+
+        rows.forEach(({ rowHTML, rank }) => {
+            // Überprüfe, ob der Rang bereits hinzugefügt wurde
+            if (addedRanks.has(rank)) {
+                console.log(`Rang ${rank} bereits hinzugefügt. Überspringe Zeile.`);
+                return;
+            }
+
+            const row = document.createElement('tr');
+            row.innerHTML = rowHTML; // Zeile als HTML einfügen
+            mainTable.appendChild(row);
+            addedRanks.add(rank); // Rang zur Set hinzufügen, um Duplikate zu vermeiden
+        });
+
+        // Speichern der hinzugefügten Ränge im localStorage
+        localStorage.setItem('addedRanks', JSON.stringify(Array.from(addedRanks)));
+    }
+
+    // Hauptlogik des Skripts
+    async function loadAllRanks() {
+        let pos = 1; // Startposition für die erste Seite
+        let hasMore = true;
+        let lastRowHTML = ''; // Variable zum Speichern der letzten Zeile
+
+        // Entferne das Formular zu Beginn
+        removeForm();
+
+        // Zuerst die erste Seite mit den ersten Rängen laden
+        const doc = await fetchPage(pos);
+        if (!doc) {
+            console.warn(`Fehler beim Laden der ersten Seite.`);
+            return;
+        }
+
+        // Extrahiere die Ränge von der ersten Seite und füge sie hinzu
+        const firstPageRanks = extractRanks(doc);
+        appendRanksToTable(firstPageRanks);
+        firstPageRanks.forEach(({ rank }) => addedRanks.add(rank)); // Füge die Ränge aus der ersten Seite zum Set hinzu
+
+        // Lade nun die weiteren Seiten ab pos=31
+        pos = 31;
+
+        while (hasMore) {
+            const doc = await fetchPage(pos);
+            if (!doc) {
+                console.warn(`Keine weiteren Daten für pos=${pos}`);
+                hasMore = false;
+                break;
+            }
+
+            const ranks = extractRanks(doc);
+            if (ranks.length > 0) {
+                console.log(`Ränge von pos=${pos} geladen:`, ranks);
+
+                // Vergleiche die letzte Zeile mit der letzten bekannten Zeile
+                const currentLastRowHTML = ranks[ranks.length - 1].rowHTML;
+                if (currentLastRowHTML === lastRowHTML) {
+                    console.log('Keine neuen Einträge gefunden. Stoppe das Laden.');
+                    hasMore = false;
+                    break;
+                }
+
+                // Aktualisiere die letzte bekannte Zeile und füge neue Ränge ein
+                lastRowHTML = currentLastRowHTML;
+                appendRanksToTable(ranks);
+                ranks.forEach(({ rank }) => addedRanks.add(rank)); // Neue Ränge in das Set einfügen
+                pos += 30; // Nächste Seite
+            } else {
+                console.warn(`Keine weiteren Ränge bei pos=${pos}.`);
+                hasMore = false;
+            }
+        }
+
+        console.log('Laden aller Ränge abgeschlossen.');
+    }
+
+    // Skript starten, sobald die Seite vollständig geladen ist
+    window.addEventListener('load', () => {
+        loadAllRanks();
+    });
+})();
