@@ -14,3 +14,6 @@ Ein Button, der alle Rohstoffe, Handwerksmaterialien und alles Gold in das Inven
 
 ## Avatare in Gruppenübersicht
 Hiermit lassen sich die Avatare vor den Charakternamen anzeigen.
+
+## Gruppenbericht filtern
+Fügt dem Gruppenbericht einen Button hinzu, der die Nachricht so umgestaltet, dass oben die Anzahl der Kämpfe, Anzahl der gewonnen Kämpfe und die gefunden Pläne auflistet, und ausschließlich Kampfereignisse darstellt, dabei wird jeder in einer Zeile angezeigt mit dem Zusatz, ob der Kampf gewonnen oder verloren wurde und wie viele Runden er ging.
