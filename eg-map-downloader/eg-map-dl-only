@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Einfacher Karten-Downloader für Evergore
-// @version      0.1
+// @version      0.2
 // @description  Passt die Karte an, aktiviert Checkboxen, lädt sie herunter und ermöglicht das manuelle Beenden des Skripts durch einen Button.
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=map
@@ -121,13 +121,16 @@
 
         const button = document.createElement('button');
         button.textContent = 'Karte herunterladen';
-        button.style.padding = '10px 20px';
+        button.style.padding = '5px 10px';
         button.style.cursor = 'pointer';
         button.style.border = '1px solid #ccc';
         button.style.borderRadius = '5px';
-        button.style.backgroundColor = '#4CAF50';
-        button.style.color = 'white';
+        button.style.backgroundImage = 'url("https://evergore.de/skins/komo/gfx/th.png")';
+        button.style.backgroundSize = 'cover';
+        button.style.color = 'black';
         button.style.fontWeight = 'bold';
+        button.style.textAlign = 'center';
+        button.style.marginBottom ='10px';
         button.style.marginTop = '10px';
 
         // Klick-Ereignis für den Button
