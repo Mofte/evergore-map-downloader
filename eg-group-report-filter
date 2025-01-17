@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         Evergore Gruppenbericht filtern
 // @description  Fügt dem Gruppenbericht einen Button hinzu, um nur Kämpfe und gefundene Pläne anzuzeigen
-// @version      0.6a
+// @version      0.6b
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=msg_view*
-// @grant        none
+// @icon         https://evergore.de/favicon.ico
 // ==/UserScript==
 
 (function () {
