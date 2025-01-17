@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         Gildenrangliste nach Gesamtstufe
-// @version      0.3
+// @version      0.3a
 // @description  Ändert in der Gildenrangliste in allen Welten die Gesamtpunkte in Gesamtstufe und sortiert die Tabelle danach und stellt alle Gilden auf einer Seite dar
 // @author       mofte
 // @match        https://evergore.de/*?page=ranking_guild
+// @icon         https://evergore.de/favicon.ico
 // ==/UserScript==
 
 (function () {
