@@ -2,9 +2,10 @@
 // @name          Avatareinblendungen
 // @description   Zeigt die Avatare in der Gruppen- und Gildenübersicht neben den jeweiligen Namen an
 // @author        mofte
-// @version       0.6
+// @version       0.6a
 // @match         https://evergore.de/lenoran?page=group_info
 // @match         https://evergore.de/lenoran?page=guild_organisation
+// @icon         https://evergore.de/favicon.ico
 // ==/UserScript==
 
 (function() {
