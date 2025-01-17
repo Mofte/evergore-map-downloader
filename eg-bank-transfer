@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         Evergore Bank Transfer
 // @namespace    https://evergore.de/
-// @version      0.2a
+// @version      0.2b
 // @description  Fügt zwei Button hinzu, um Rohstoffe, Handwerksmaterialien und Gold komplett in das Inventar bzw. in die Bank zu transferieren.
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=bank
 // ==/UserScript==
 
-(function() {
+(function () {
     'use strict';
 
     // Funktion zum Stylen der Buttons
@@ -42,7 +42,7 @@
     // Funktion für den Button "in das Inventar"
     toInventoryButton.addEventListener('click', () => {
         const rows = document.querySelectorAll('tr'); // Alle Zeilen in der Tabelle
-        let found = false;
+        let goldSet = false;
 
         rows.forEach(row => {
             const text = row.textContent.toLowerCase();
@@ -55,7 +55,6 @@
                 // Setze Wert nur bei id="p1"
                 if (id === 'p1' && input) {
                     input.value = 9999; // Wert setzen
-                    found = true;
                     console.log('Rohstoff/Handwerksmaterial mit id="p1" gefunden, Wert auf 9999 gesetzt.');
                 }
             }
@@ -65,29 +64,26 @@
         const bankgoldInput = document.querySelector('input[name="bankgold"]');
         if (bankgoldInput) {
             bankgoldInput.value = 99999;
+            goldSet = true;
             console.log('Bankgold auf 99999 gesetzt.');
         } else {
             console.error('Kein Bankgold-Feld gefunden.');
         }
 
         // Klick auf den "Durchführen"-Button auslösen
-        if (found) {
-            const executeButton = document.querySelector('button[type="submit"], input[type="submit"]');
-            if (executeButton) {
-                executeButton.click();
-                console.log('"in das Inventar"-Transfer abgeschlossen.');
-            } else {
-                console.error('Kein Durchführen-Button gefunden.');
-            }
+        const executeButton = document.querySelector('button[type="submit"], input[type="submit"]');
+        if (goldSet || executeButton) {
+            executeButton.click();
+            console.log('"in das Inventar"-Transfer abgeschlossen.');
         } else {
-            alert('Keine passenden Rohstoffe oder Handwerksmaterialien gefunden.');
+            alert('Keine Rohstoffe, Handwerksmaterialien oder Gold gefunden.');
         }
     });
 
     // Funktion für den Button "in die Bank"
     toBankButton.addEventListener('click', () => {
         const rows = document.querySelectorAll('tr'); // Alle Zeilen in der Tabelle
-        let found = false;
+        let goldSet = false;
 
         rows.forEach(row => {
             const text = row.textContent.toLowerCase();
@@ -100,7 +96,6 @@
                 // Setze Wert nur bei id="p2"
                 if (id === 'p2' && input) {
                     input.value = 9999; // Wert setzen
-                    found = true;
                     console.log('Rohstoff/Handwerksmaterial mit id="p2" gefunden, Wert auf 9999 gesetzt.');
                 }
             }
@@ -110,22 +105,19 @@
         const herogoldInput = document.querySelector('input[name="herogold"]');
         if (herogoldInput) {
             herogoldInput.value = 99999;
+            goldSet = true;
             console.log('Herogold auf 99999 gesetzt.');
         } else {
             console.error('Kein Herogold-Feld gefunden.');
         }
 
         // Klick auf den "Durchführen"-Button auslösen
-        if (found) {
-            const executeButton = document.querySelector('button[type="submit"], input[type="submit"]');
-            if (executeButton) {
-                executeButton.click();
-                console.log('"in die Bank"-Transfer abgeschlossen.');
-            } else {
-                console.error('Kein Durchführen-Button gefunden.');
-            }
+        const executeButton = document.querySelector('button[type="submit"], input[type="submit"]');
+        if (goldSet || executeButton) {
+            executeButton.click();
+            console.log('"in die Bank"-Transfer abgeschlossen.');
         } else {
-            alert('Keine passenden Rohstoffe oder Handwerksmaterialien gefunden.');
+            alert('Keine Rohstoffe, Handwerksmaterialien oder Gold gefunden.');
         }
     });
 
