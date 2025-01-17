@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Einfacher Karten-Downloader für Evergore
-// @version      0.2a
+// @version      0.3
 // @description  Passt die Karte an, aktiviert Checkboxen, lädt sie herunter und ermöglicht das manuelle Beenden des Skripts durch einen Button.
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=map
@@ -104,15 +104,14 @@
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
-
-                // Button zu "Skript beenden" ändern
-                button.textContent = 'Skript beenden';
-                button.removeEventListener('click', downloadMap); // Vorherigen Listener entfernen
-                button.addEventListener('click', () => window.location.reload()); // Neuladen der Seite
             } else {
                 alert("Fehler: mapCanvas wurde nicht gefunden.");
             }
         }, 250); // Wartezeit auf 0,25 Sekunden
+
+        setTimeout(() => {
+            window.location.reload();
+        }, 250);
     }
 
     // Button erstellen und zur Seite hinzufügen
