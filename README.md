@@ -26,3 +26,6 @@ Sortiert **auf allen Welten** die Gilden in der Gildenhalle alphabetisch und nic
 
 ## Städterangliste nach Gebäuden
 Sortiert die Städterangliste in allen Welten nach Anzahl der Gebäude und bei Gleichstand nach Anzahl der Einwohner.
+
+## Evergore Map Checkbox Saver
+Speichert den Value der Checkboxen im localStorage, damit die Werte erhalten bleiben.
