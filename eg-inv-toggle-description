@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         Evergore Inventarbeschreibungen ausklappen
-// @version      0.2a
+// @version      0.2b
 // @description  Adds a button to toggle all accordion sections in Evergore's inventory page
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=inventory
+// @icon         https://evergore.de/favicon.ico
 // ==/UserScript==
 
 (function() {
