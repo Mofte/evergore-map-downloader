@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         Einfacher Karten-Downloader für Evergore
-// @version      0.2
+// @version      0.2a
 // @description  Passt die Karte an, aktiviert Checkboxen, lädt sie herunter und ermöglicht das manuelle Beenden des Skripts durch einen Button.
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=map
+// @icon         https://evergore.de/favicon.ico
 // ==/UserScript==
 
 (function() {
