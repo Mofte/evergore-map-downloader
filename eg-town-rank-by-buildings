@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         Evergore Städterangliste nach Gebäudeanzahl
-// @version      0.2
+// @version      0.2a
 // @description  Sortiert die Städterangliste nicht mehr alphabetisch sondern nach Gebäudeanzahl und bei Gleichstand nach Einwohner
 // @author       mofte
 // @match        https://evergore.de/*?page=ranking_town
+// @icon         https://evergore.de/favicon.ico
 // ==/UserScript==
 
 (function() {
