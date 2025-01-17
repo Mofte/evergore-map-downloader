@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         Evergore Map Downloader mit Ausschnittsauwwahl
-// @version      0.2b
+// @version      0.2c
 // @description  Passt die Canvas-Größe und CSS an, ermöglicht die Auswahl eines Kartenausschnitts und Download der Karte.
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=map
+// @icon         https://evergore.de/favicon.ico
 // ==/UserScript==
 
 (function () {
