@@ -1,0 +1,55 @@
+// ==UserScript==
+// @name         Evergore Map Checkbox Saver
+// @version      0.1
+// @description  Speichert den Status der Checkboxes auf der Evergore Map-Seite im localStorage und ruft ihn beim Laden der Seite ab.
+// @author       mofte
+// @match        https://evergore.de/lenoran?page=map
+// @icon         https://evergore.de/favicon.ico
+// ==/UserScript==
+
+(function () {
+  "use strict";
+
+  const checkboxSelector = '#mapControl input[type="checkbox"][data-bit]';
+
+  // Funktion zum Speichern und Löschen des Zustands
+  function saveCheckboxState(checkbox) {
+    const bit = checkbox.getAttribute("data-bit");
+    const isChecked = checkbox.checked;
+    localStorage.setItem(`mapCheckbox-${bit}`, isChecked);
+  }
+
+  // Entfernen von 'false' Werten aus localStorage
+  function cleanFalseCheckboxStates() {
+    document.querySelectorAll(checkboxSelector).forEach((checkbox) => {
+      const bit = checkbox.getAttribute("data-bit");
+      if (localStorage.getItem(`mapCheckbox-${bit}`) === "false") {
+        localStorage.removeItem(`mapCheckbox-${bit}`);
+        checkbox.checked = false;
+      }
+    });
+  }
+
+  // Laden des gespeicherten Zustands der Checkboxen
+  function loadCheckboxStates() {
+    document.querySelectorAll(checkboxSelector).forEach((checkbox) => {
+      const bit = checkbox.getAttribute("data-bit");
+      const storedValue = localStorage.getItem(`mapCheckbox-${bit}`);
+      if (storedValue !== null) {
+        checkbox.checked = storedValue === "true";
+        checkbox.dispatchEvent(new Event("change"));
+      }
+    });
+  }
+
+  // Initialisierung
+  function initialize() {
+    cleanFalseCheckboxStates();
+    loadCheckboxStates();
+    document.querySelectorAll(checkboxSelector).forEach((checkbox) => {
+      checkbox.addEventListener("change", () => saveCheckboxState(checkbox));
+    });
+  }
+
+  window.addEventListener("load", initialize);
+})();
