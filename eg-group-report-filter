@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evergore Gruppenbericht filtern
-// @description  Fügt dem Gruppenbericht einen Button hinzu, um nur Kämpfe und gefundene Pläne anzuzeigen
-// @version      0.6b
+// @description  Fügt dem Gruppenbericht einen Button hinzu, um nur Kämpfe anzuzeigen
+// @version      0.7
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=msg_view*
 // @icon         https://evergore.de/favicon.ico
@@ -10,33 +10,9 @@
 (function () {
     'use strict';
 
-  const style = document.createElement("style");
-    style.textContent = `
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    `;
-    document.head.appendChild(style);
-
     if (document.body.innerHTML.includes("Kampfereignis beendet.")) {
-        const nav2Div = document.getElementById('nav2');
-        const playerName = nav2Div?.querySelector('h2')?.textContent.trim();
-
-        const filterButton = createButton("Kampfberichte filtern", async () => {
-            // Zeige den sich drehenden Kreis
-            const spinner = document.createElement("div");
-            spinner.innerHTML = `<div style="display:inline-block; margin-left:10px;">
-                                    <div style="width:20px; height:20px; border:3px solid #ccc; border-top:3px solid #007bff; border-radius:50%; animation: spin 1s linear infinite;"></div>
-                                 </div>`;
-            spinner.style.display = "inline-block";
-            spinner.style.verticalAlign = "middle";
-            filterButton.parentNode.replaceChild(spinner, filterButton);
-
-            await filterReports(playerName);
-
-            // Ersetze den Spinner mit dem Zurücksetzen-Button
-            spinner.remove();
+        const filterButton = createButton("Kampfberichte filtern", () => {
+            filterReports();
             createResetButton();
         });
 
@@ -59,52 +35,29 @@
         deleteButtonParent?.appendChild(resetButton);
     }
 
-    async function filterReports(playerName) {
+    function filterReports() {
         const paragraphs = document.querySelectorAll("p");
-        const allPlans = new Set();
-        let battleCount = 0;
-        let winCount = 0;
-        const formattedLines = [];
 
-        for (let p of paragraphs) {
-            if (!p.innerHTML.startsWith("<b>Gruppenmitglieder</b>")) continue;
+        paragraphs.forEach(p => {
+            if (!p.innerHTML.startsWith("<b>Gruppenmitglieder</b>")) return;
 
             const lines = p.innerHTML.split("<br>");
             const groupMembers = lines[1]; // Gruppenmitglieder bleiben unverändert
             const filteredLines = lines.filter(line => line.includes('<a href="?page=battle_report'));
-            battleCount += filteredLines.length;
+            const battleCount = filteredLines.length;
 
-            for (let line of filteredLines) {
-                const linkMatch = line.match(/<a href="\?page=battle_report.*?<\/a>/);
-                if (!linkMatch) continue;
+            const formattedLines = filteredLines.map(line => {
+                const timestamp = extractTimestamp(p.innerHTML, line);
+                return `${timestamp} | ${line}`;
+            });
 
-                const fullLink = "https://evergore.de/lenoran" + linkMatch[0].match(/href="(.*?)"/)[1];
-                const { result, plans, estimatedRounds } = await checkBattleResult(fullLink, playerName);
-
-                if (result === "Kampf gewonnen!") winCount++;
-                plans.forEach(plan => allPlans.add({ plan, link: fullLink }));
-
-                const timestamp = extractTimestamp(p.innerHTML, linkMatch[0]);
-                const roundText = estimatedRounds ? ` ${estimatedRounds} ${estimatedRounds === 1 ? "Runde" : "Runden"}` : "";
-                const resultStyled = result === "Kampf verloren!"
-                    ? `<span style="background-color: red; padding: 2px 4px; border-radius: 4px;">${result}</span>`
-                    : result;
-                formattedLines.push(`${timestamp} | ${resultStyled} | ${roundText} | ${linkMatch[0]}`);
-            }
-
-            const winText = winCount === battleCount ? "alle" : winCount.toString();
-            const plansText = allPlans.size > 0
-                ? `<br><br><b>Gefundene Pläne:</b> ${Array.from(allPlans).map(item => `<a href="${item.link}">${item.plan}</a>`).join(", ")}`
-                : "";
-
-            // Setze den neuen Inhalt des Absatzes
             p.innerHTML = `
                 <b>Gruppenmitglieder</b><br>
                 ${groupMembers}<br>
-                <br><b>${battleCount} Kämpfe, davon ${winText} gewonnen</b>${plansText}<br><br>
+                <br><b>${battleCount} Kämpfe</b><br><br>
                 ${formattedLines.join("<br><br>")}
             `;
-        }
+        });
     }
 
     function extractTimestamp(html, linkMatch) {
@@ -113,40 +66,5 @@
         const beforeTime = beforeParts[0]?.split(" ")[0]?.trim(); // Uhrzeit
         const beforeDay = beforeParts[0]?.match(/\((.*?)\)/)?.[1]?.trim(); // Wochentag
         return beforeDay && beforeTime ? `${beforeDay} | ${beforeTime}` : "Unbekannt";
-    }
-
-    async function checkBattleResult(url, playerName) {
-        try {
-            const response = await fetch(url.replace(/&amp;/g, "&"));
-            const text = await response.text();
-
-            const participantNumber = getParticipantNumber(text, playerName);
-            if (!participantNumber) return { result: "Unbekannt", plans: [], estimatedRounds: null };
-
-            const winnerNumber = text.match(/winner\((\d+)\);/)?.[1];
-            const result = participantNumber === winnerNumber ? "Kampf gewonnen!" : "Kampf verloren!";
-
-            const plans = [...text.matchAll(/loot\((.*?)\);/g)]
-                .map(match => match[1].split(",")[1]?.replace(/["']/g, "").trim())
-                .filter(item => item && item.includes("(Plan)"));
-
-            const estimatedRounds = getEstimatedRounds(text);
-            return { result, plans, estimatedRounds };
-        } catch {
-            return { result: "Fehler", plans: [], estimatedRounds: null };
-        }
-    }
-
-    function getParticipantNumber(text, playerName) {
-        const participantMatch = [...text.matchAll(/setParticipant\((.*?)\);/g)].find(match => {
-            const args = match[1].split(",");
-            return args[1].replace(/["']/g, "").trim() === playerName;
-        });
-        return participantMatch?.[1].split(",")[2]?.trim();
-    }
-
-    function getEstimatedRounds(text) {
-        const lastUnconsciousMatch = [...text.matchAll(/unconcious\((\d+),/g)].pop();
-        return lastUnconsciousMatch ? Math.ceil(parseInt(lastUnconsciousMatch[1]) / 24) : null;
     }
 })();
