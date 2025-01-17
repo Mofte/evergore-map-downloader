@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         Alphabetische Gildenhalle
-// @version      0.1 
+// @version      0.1a
 // @description  Sortiert die Gilden in der Gildenhalle alphabetisch und nicht nach guild_id.
 // @author       mofte
 // @match        https://evergore.de/*?page=guildhall
+// @icon         https://evergore.de/favicon.ico
 // ==/UserScript==
 
 (function() {
