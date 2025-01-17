@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Evergore Bank Transfer
 // @namespace    https://evergore.de/
-// @version      0.2b
+// @version      0.2c
 // @description  Fügt zwei Button hinzu, um Rohstoffe, Handwerksmaterialien und Gold komplett in das Inventar bzw. in die Bank zu transferieren.
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=bank
+// @icon         https://evergore.de/favicon.ico
 // ==/UserScript==
 
 (function () {
