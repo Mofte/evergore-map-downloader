@@ -1,9 +1,10 @@
+// Zurzeit deaktiviert!
 // ==UserScript==
 // @name         Evergore Map Downloader
 // @version      0.1.3b
 // @description  Passt die canvas Größe und CSS an, damit die ganze Karte dargestellt wird und versteckt störende Layer, damit ein Download möglich ist.
 // @author       mofte
-// @match        https://evergore.de/lenoran?page=map
+// match        https://evergore.de/lenoran?page=map
 // ==/UserScript==
 
 (function() {
