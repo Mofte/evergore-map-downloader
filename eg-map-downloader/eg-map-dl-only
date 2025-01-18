@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Einfacher Karten-Downloader für Evergore
-// @version      0.3
+// @version      0.4
 // @description  Passt die Karte an, aktiviert Checkboxen, lädt sie herunter und ermöglicht das manuelle Beenden des Skripts durch einen Button.
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=map
@@ -66,7 +66,7 @@
         return navHeader ? navHeader.textContent.trim().replace(/\s+/g, '_') : 'unbekannt';
     }
 
-    // Funktion zur Aktivierung spezifischer Checkboxen
+    // Funktion: Checkboxen aktivieren, falls sie noch nicht im localStorage auf "true" gesetzt sind
     function activateCheckboxes() {
         const checkboxes = [
             document.querySelector('input[type="checkbox"][data-bit="1"]'),
@@ -75,8 +75,15 @@
 
         checkboxes.forEach(checkbox => {
             if (checkbox) {
-                checkbox.checked = true;
-                checkbox.dispatchEvent(new Event('change'));
+                const bit = checkbox.getAttribute("data-bit");
+                const storedValue = localStorage.getItem(`mapCheckbox-${bit}`);
+
+                // Checkbox nur aktivieren, wenn sie nicht bereits im localStorage auf "true" gesetzt ist
+                if (storedValue !== "true") {
+                    checkbox.checked = true;
+                    checkbox.dispatchEvent(new Event("change"));
+                    localStorage.setItem(`mapCheckbox-${bit}`, "true"); // Status im localStorage speichern
+                }
             }
         });
     }
