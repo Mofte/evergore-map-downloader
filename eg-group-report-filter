@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evergore Gruppenbericht filtern
 // @description  Fügt dem Gruppenbericht einen Button hinzu, um nur Kämpfe anzuzeigen
-// @version      0.7
+// @version      0.8
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=msg_view*
 // @icon         https://evergore.de/favicon.ico
@@ -30,6 +30,12 @@
     }
 
     function createResetButton() {
+        // Suche und entferne den "Kampfberichte filtern"-Button
+        const filterButton = document.querySelector('button.btn');
+        if (filterButton && filterButton.textContent === "Kampfberichte filtern") {
+            filterButton.remove();
+        }
+
         const resetButton = createButton("Zurücksetzen", () => location.reload());
         const deleteButtonParent = document.querySelector('input[value="Löschen"]')?.parentNode;
         deleteButtonParent?.appendChild(resetButton);
