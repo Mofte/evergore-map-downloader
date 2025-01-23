@@ -50,3 +50,4 @@ Ich bin bisher recht angetan von dem Skript, lasse das noch von Haudrauf absegne
 - Feld zum ein- und ausblenden der Feldstufen
 - ~~simulateZoom zoomt nur raus, prüfen, ob sich hierdurch der Kartenausschnitt ungünstig ändert~~
 - Reihenfolge in der onStartClick Funktion und Timeout notwendig?
+- Zoomen vor Ausführen des Skripts führt dazu, dass ein falscher Kartenausschnitt ausgegeben wird
