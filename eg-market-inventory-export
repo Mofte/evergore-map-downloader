@@ -1,0 +1,226 @@
+// ==UserScript==
+// @name         Evergore manueller Marktbestand CSV-Export
+// @version      0.1
+// @description  Exportiert den Bestand des eigenen Marktstandes in eine CSV-Datei
+// @author       mofte
+// @match        https://evergore.de/lenoran?page=market_own*
+// @icon         https://evergore.de/favicon.ico
+// ==/UserScript==
+
+(function () {
+    'use strict';
+
+    const localStorageKey = 'exportMarketData';
+    const exportInProgressKey = 'exportInProgress';
+
+    // Temporärer Speicher für alle Seiten
+    let pageData = JSON.parse(localStorage.getItem(localStorageKey) || '[]');
+
+    // Funktion zum Stylen von Buttons
+    function styleButton(button) {
+        button.style.padding = '5px 10px';
+        button.style.cursor = 'pointer';
+        button.style.border = '1px solid #ccc';
+        button.style.borderRadius = '5px';
+        button.style.backgroundImage = 'url("https://evergore.de/skins/komo/gfx/th.png")';
+        button.style.backgroundSize = 'cover';
+        button.style.color = 'black';
+        button.style.fontWeight = 'bold';
+        button.style.marginRight = '10px';
+    }
+
+    // Funktion: Charaktername auslesen
+    function getCharacterName() {
+        const navHeader = document.querySelector('#nav2 h2');
+        return navHeader ? navHeader.textContent.trim().replace(/\s+/g, '_') : 'unbekannt';
+    }
+
+    // Funktion zur CSV-Exportlogik
+    function exportTableData() {
+        const table = document.querySelectorAll('table')[3];
+        if (!table) {
+            console.error('Tabelle nicht gefunden.');
+            return;
+        }
+
+        const rows = table.querySelectorAll('tr');
+        let newData = [];
+
+        rows.forEach(row => {
+            const articleInput = row.querySelector('input[type="checkbox"][name^="article"], input[type="number"][name^="article"]');
+            const label = row.querySelector('label[for^="handle"] b');
+            const content = row.querySelector('.content');
+            const inputValue = row.querySelector('input[type="text"][name^="buy"]');
+            const marketValue = row.querySelector('td:nth-child(3)');
+
+            if (articleInput && label && content && inputValue) {
+                const articleName = articleInput.name;
+                const itemName = label.textContent.trim();
+                const priceMatch = content.innerHTML.match(/Unverbindlicher Preis: (\d+) Gold/);
+                const marketValueMatch = marketValue.innerHTML.match(/Marktwert: (\d+) Gold/);
+                const offerValue = inputValue.value.trim();
+
+                const unverbindlicherPreis = priceMatch ? parseInt(priceMatch[1]) : null;
+                const marktwert = marketValueMatch ? parseInt(marketValueMatch[1]) : null;
+
+                let amount = 1;
+                const numberInName = itemName.match(/^(\d+)\s/);
+                if (numberInName) {
+                    amount = parseInt(numberInName[1]);
+                } else if (articleInput.type === "number") {
+                    amount = parseInt(articleInput.value) || 1;
+                }
+
+                const adjustedItemName = numberInName ? itemName.replace(numberInName[0], '').trim(): itemName;
+
+                newData.push([
+                    amount,
+                    adjustedItemName,
+                    articleName,
+                    unverbindlicherPreis,
+                    marktwert,
+                    parseFloat(offerValue)
+                ]);
+            }
+        });
+
+        // Filtere neue Daten, um Duplikate zu vermeiden
+        newData = newData.filter(item => !pageData.some(existingItem => existingItem[1] === item[1] && existingItem[2] === item[2]));
+
+        // Wenn neue Daten vorhanden sind, füge sie hinzu
+        if (newData.length > 0) {
+            pageData = pageData.concat(newData);
+            localStorage.setItem(localStorageKey, JSON.stringify(pageData));
+        }
+    }
+
+    // Funktion zum Konvertieren von Daten in CSV
+    function convertToCSV(dataArray, headers) {
+        const csvRows = [headers.join(';')];
+        dataArray.forEach(row => {
+            const csvRow = row.map(value => (value !== null ? `"${value}"` : '')).join(';');
+            csvRows.push(csvRow);
+        });
+        return csvRows.join('\n');
+    }
+
+    // Export-Prozess
+    function exportMarketData() {
+        exportTableData();
+
+        const nextButtonInactive = document.querySelector('font.inactive');
+        const exportButton = document.querySelector('#exportButton') || document.createElement('button');
+
+        if (nextButtonInactive && nextButtonInactive.textContent === '>>') {
+            exportButton.textContent = 'CSV herunterladen';
+            exportButton.id = 'exportButton';
+            styleButton(exportButton);
+
+            exportButton.addEventListener('click', () => {
+                const headers = ['Anzahl', 'Gegenstand', 'Artikelname', 'Unverbindlicher Preis', 'Marktwert', 'Angebotspreis'];
+                const csvData = convertToCSV(pageData, headers);
+                const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const characterName = getCharacterName();
+                const today = new Date().toISOString().split('T')[0];
+                a.href = url;
+                a.download = `Marktstand-${characterName}-${today}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                localStorage.removeItem(localStorageKey);
+                localStorage.removeItem(exportInProgressKey);
+                window.location.href = 'https://evergore.de/lenoran?page=market_own';
+                alert('Datenexport abgeschlossen!');
+            });
+
+            const buttonContainer = document.querySelector('h1 + div') || document.createElement('div');
+            const h1 = document.querySelector('h1');
+            if (!h1.nextElementSibling) {
+                h1.insertAdjacentElement('afterend', buttonContainer);
+            }
+
+            if (!buttonContainer.contains(exportButton)) {
+                buttonContainer.appendChild(exportButton);
+            }
+        } else {
+            const nextPageLink = document.querySelector('th a[href*="&pos="]:last-of-type');
+            if (nextPageLink) {
+                nextPageLink.style.backgroundColor = '#e9c46a';
+                nextPageLink.scrollIntoView({ behavior: 'smooth' });
+
+                const buttonContainer = document.querySelector('h1 + div') || document.createElement('div');
+                const h1 = document.querySelector('h1');
+                if (!h1.nextElementSibling) {
+                    h1.insertAdjacentElement('afterend', buttonContainer);
+                }
+                let infoText = document.querySelector('#nextPageInfo');
+                if (!infoText) {
+                    infoText = document.createElement('div');
+                    infoText.id = 'nextPageInfo';
+                    infoText.style.marginTop = '10px';
+                    infoText.style.color = '#a00';
+                    infoText.style.fontWeight = 'bold';
+                    infoText.textContent = 'Bitte zur nächsten Seite wechseln!';
+                    buttonContainer.appendChild(infoText);
+                }
+            } else {
+                console.error('Kein Weiter-Link gefunden.');
+            }
+        }
+    }
+
+    if (localStorage.getItem(exportInProgressKey) === 'true') {
+        console.log('Export wird fortgesetzt.');
+        setTimeout(exportMarketData, 50);
+    }
+
+    // Funktion zum Zurücksetzen
+    function resetExport() {
+        localStorage.removeItem(localStorageKey);
+        localStorage.removeItem(exportInProgressKey);
+        window.location.href = 'https://evergore.de/lenoran?page=market_own';
+    }
+
+    // Buttons hinzufügen
+    const h1 = document.querySelector('h1');
+    if (h1) {
+        const buttonContainer = document.createElement('div');
+        h1.insertAdjacentElement('afterend', buttonContainer);
+
+        if (localStorage.getItem(exportInProgressKey) || localStorage.getItem(localStorageKey)) {
+            // "Zurücksetzen"-Button anzeigen
+            const resetButton = document.createElement('button');
+            resetButton.id = 'resetButton';
+            resetButton.textContent = 'Zurücksetzen';
+            styleButton(resetButton);
+            resetButton.addEventListener('click', resetExport);
+            buttonContainer.appendChild(resetButton);
+        } else {
+            const exportButton = document.createElement('button');
+            exportButton.id = 'exportButton';
+            exportButton.textContent = 'Bestand in CSV exportieren';
+            styleButton(exportButton);
+
+            exportButton.addEventListener('click', () => {
+                localStorage.setItem(exportInProgressKey, 'true');
+                localStorage.removeItem(localStorageKey);
+                window.location.href = 'https://evergore.de/lenoran?page=market_own';
+            });
+
+            buttonContainer.appendChild(exportButton);
+
+            let infoText = document.querySelector('#exportInfo');
+            if (!infoText) {
+                infoText = document.createElement('div');
+                infoText.id = 'exportInfo';
+                infoText.style.marginTop = '10px';
+                infoText.style.color = '#a00';
+                infoText.innerHTML = 'Nach dem Start müssen alle Seiten manuell durchgeklickt werden.<br>Auf der letzten Seite ist ein Button zum Herunterladen.';
+                buttonContainer.appendChild(infoText);
+            }
+        }
+    }
+})();
