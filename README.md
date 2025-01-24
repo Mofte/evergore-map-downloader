@@ -27,5 +27,11 @@ Sortiert **auf allen Welten** die Gilden in der Gildenhalle alphabetisch und nic
 ## Städterangliste nach Gebäuden
 Sortiert die Städterangliste in allen Welten nach Anzahl der Gebäude und bei Gleichstand nach Anzahl der Einwohner.
 
-## Evergore Map Checkbox Saver
+## Map Checkbox Saver
 Speichert den Value der Checkboxen im localStorage, damit die Werte erhalten bleiben.
+
+## Marktbestand Export
+Exportiert den Bestand des eigenen Marktstandes in eine CSV-Datei. Da automatische Seitenwechsel durch ein Skript nicht zulässig sind erfolgt bei einem Klick zum Starten des Skripts ein Wechsel auf die erste Seite des eigenen Marktstandes und man wird zum manuellen Wechsel der Seiten aufgefordert. Auf der letzten Seite gibt es dann einen Button zum Download der CSV-Datei. 
+
+## Marktprotokoll Export
+Ähnlich wie das Skript zum Export des Marktbestandes wird hier nichts automatisch ausgelesen sondern nur manuell je Seite, die aufgerufen wird. Anders als bei dem o.g. Skript kann der Export seitenweise erfolgen - das ganze Protokoll ist doch recht lang. Hierzu muss man einfach das Skript auf einer beliebigen Seite starten und kann dann entweder die Datei herunterladen oder die gespeicherten Daten zurücksetzen. Bei jedem Seitenwechsel werden die neuen Daten gespeichert, Duplikate werden dabei gelöscht. Wenn man mit der Auswahl zufrieden ist kann die Datei heruntergeladen werden.
