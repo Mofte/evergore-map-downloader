@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Evergore Marktprotokoll CSV-Export
-// @version      0.1
+// @version      0.2
 // @description  Exportiert die Einträge des Marktprotokolls in eine CSV-Datei
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=market_protocol*
@@ -233,6 +233,17 @@
                 updateButtons(container);
             });
             container.appendChild(exportButton);
+            //Infotext unter exportButton
+            let infoText = document.createElement('div');
+            infoText.style.marginTop = '10px';
+            infoText.style.color = '#a00';
+            infoText.style.fontSize = 'small';
+            infoText.innerHTML = `Mit dem Button "Ab hier als CSV exportieren" startet der Export.<br>
+                Die aktuelle Seite wird zwischengespeichert und bei jedem Seitenwechsel werden neue Daten automatisch ergänzt.<br>
+                Alle so gespeicherten Daten können über den entsprechenden Button als CSV-Datei heruntergeladen werden.<br>
+                <u>Es muss nicht das gesamte Protokoll exportiert werden!</u>`;
+            container.appendChild(infoText);
+
         } else {
             updateButtons(container);
         }
