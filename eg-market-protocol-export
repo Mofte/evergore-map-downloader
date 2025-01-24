@@ -1,0 +1,259 @@
+// ==UserScript==
+// @name         Evergore Marktprotokoll CSV-Export
+// @version      0.1
+// @description  Exportiert die Einträge des Marktprotokolls in eine CSV-Datei
+// @author       mofte
+// @match        https://evergore.de/lenoran?page=market_protocol*
+// @icon         https://evergore.de/favicon.ico
+// ==/UserScript==
+
+(function () {
+    'use strict';
+
+    const localStorageKey = 'marketProtocolData';
+    const isExportingKey = 'isExporting';
+    let pageData = JSON.parse(localStorage.getItem(localStorageKey) || '[]');
+
+    // Funktion: Charaktername auslesen
+    function getCharacterName() {
+        const navHeader = document.querySelector('#nav2 h2');
+        return navHeader ? navHeader.textContent.trim().replace(/\s+/g, '_') : 'unbekannt';
+    }
+
+    // Funktion: Button stylen
+    function styleButton(button) {
+        button.style.padding = '5px 10px';
+        button.style.cursor = 'pointer';
+        button.style.border = '1px solid #ccc';
+        button.style.borderRadius = '5px';
+        button.style.backgroundImage = 'url("https://evergore.de/skins/komo/gfx/th.png")';
+        button.style.backgroundSize = 'cover';
+        button.style.color = 'black';
+        button.style.fontWeight = 'bold';
+        button.style.marginRight = '10px';
+    }
+
+    // Funktion: Tabelle auslesen
+    function extractTableData() {
+        const table = document.querySelectorAll('table')[2]; // 3. Tabelle auf der Seite
+        if (!table) {
+            console.error('Tabelle nicht gefunden.');
+            return [];
+        }
+
+        const rows = table.querySelectorAll('tr');
+        const newData = [];
+
+        rows.forEach((row) => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length === 3) {
+                const date = cells[0].textContent.trim();
+                const [day, time] = date.split(' ');
+                let character = cells[1].textContent.trim();
+                const rawDetails = cells[2].innerHTML;
+
+                let currentTransactionType = 'Verkauf'; // Standardmäßig auf Verkauf setzen
+
+                // Prüfen, ob es sich um Tägliche Standgebühren handelt
+                if (character === 'Tägliche Standgebühren') {
+                    character = ''; // Charakter leer setzen
+                    currentTransactionType = 'Tägliche Standgebühren';
+                }
+
+                // Zerlege die Transaktionsdetails in Blöcke
+                const transactionBlocks = rawDetails.split(/<u>(Einlagerung|Entnahme)<\/u>/).filter((block) => block.trim());
+
+                transactionBlocks.forEach((block) => {
+                    if (block === 'Einlagerung' || block === 'Entnahme') {
+                        currentTransactionType = block; // Setze den Transaktionstyp
+                    } else {
+                        // Verarbeite die Details in diesem Block
+                        const transactionDetails = block.split('<br>').map((entry) => entry.trim());
+                        transactionDetails.forEach((detail) => {
+                            if (detail) {
+                                // Überprüfe, ob der Detailtext mit einer Zahl beginnt
+                                const quantityMatch = detail.match(/^(\d+)/);
+                                let quantity = quantityMatch ? quantityMatch[0] : '1'; // Menge extrahieren oder 1 setzen
+                                let item = detail;
+
+                                // Wenn keine Menge extrahiert wurde, setze die Menge auf 1 und behalte die Klammern bei
+                                if (!quantityMatch) {
+                                    item;
+                                } else {
+                                    item = item.replace(quantity, '').trim(); // Ware extrahieren (Menge entfernen)
+                                }
+
+                                let price = '';
+
+                                // Falls Preis vorhanden ist, entferne "für" und "Gold"
+                                const priceMatch = item.match(/für (\d+) Gold/);
+                                if (priceMatch) {
+                                    price = priceMatch[1]; // Preis extrahieren
+                                    item = item.replace(priceMatch[0], '').trim(); // Entferne Preisangabe
+                                }
+
+                                // Füge die neue Zeile mit Menge, Ware und Preis hinzu
+                                newData.push([day, time, character, currentTransactionType, quantity, item, price]);
+                            }
+                        });
+                    }
+                });
+            }
+        });
+
+        // Entferne Duplikate basierend auf der String-Repräsentation der Zeilen
+        return newData.filter(
+            (item) => !pageData.some((existing) => JSON.stringify(existing) === JSON.stringify(item))
+        );
+    }
+
+    // Funktion: Daten speichern
+    function saveCurrentPageData() {
+        const newData = extractTableData();
+        if (newData.length > 0) {
+            pageData = pageData.concat(newData);
+            localStorage.setItem(localStorageKey, JSON.stringify(pageData));
+        }
+    }
+
+    // Hilfsfunktion zum Formatieren von Datum auf yyyy-mm-dd
+    function formatDate(dateString) {
+        const [day, time] = dateString.split(' ');
+        const [dayOfMonth, month, year] = day.split('.');
+        return `${year}-${month.padStart(2, '0')}-${dayOfMonth.padStart(2, '0')}`;
+    }
+
+    // Funktion: CSV konvertieren
+    function convertToCSV(dataArray) {
+        // Sortiere nach Datum und Uhrzeit in absteigender Reihenfolge
+        const sortedData = dataArray.sort((a, b) => {
+            // Datum und Uhrzeit in ein kompatibles Format konvertieren
+            const dateA = new Date(
+                a[0].split('.').reverse().join('-') + 'T' + a[1]
+            );
+            const dateB = new Date(
+                b[0].split('.').reverse().join('-') + 'T' + b[1]
+            );
+
+            // Sortiere absteigend
+            return dateB - dateA;
+        });
+
+        const headers = ['Tag', 'Uhrzeit', 'Charakter', 'Art der Transaktion', 'Menge', 'Ware', 'Preis'];
+        const csvRows = [headers.join(';')];
+
+        sortedData.forEach((row) => {
+            csvRows.push(row.map((value) => `"${value}"`).join(';'));
+        });
+
+        // Extrahiere das früheste und späteste Datum für den Dateinamen
+        const earliestDate = sortedData[sortedData.length - 1][0]; // Der letzte Eintrag nach Sortierung
+        const latestDate = sortedData[0][0]; // Der erste Eintrag nach Sortierung
+
+        // Formatiere die Daten als yyyy-mm-dd
+        const formattedEarliestDate = formatDate(earliestDate);
+        const formattedLatestDate = formatDate(latestDate);
+
+        const characterName = getCharacterName();
+
+        // Generiere den Dateinamen
+        const fileName = `Marktprotokoll-${characterName}-${formattedEarliestDate}-bis-${formattedLatestDate}.csv`;
+
+        return { csvData: csvRows.join('\n'), fileName };
+    }
+
+    // Funktion: CSV herunterladen
+    function downloadCSV() {
+        const { csvData, fileName } = convertToCSV(pageData);
+        const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;  // Verwende den neuen Dateinamen
+        link.click();
+
+        URL.revokeObjectURL(url);
+    }
+
+    // Buttons aktualisieren
+    function updateButtons(container) {
+        container.innerHTML = '';
+
+        // "Gespeicherte Daten herunterladen"-Button
+        const downloadButton = document.createElement('button');
+        downloadButton.textContent = 'Gespeicherte Daten herunterladen';
+        styleButton(downloadButton);
+        downloadButton.addEventListener('click', () => {
+            downloadCSV();
+            localStorage.removeItem(localStorageKey);
+            localStorage.removeItem(isExportingKey);
+            pageData = [];
+            location.reload();
+        });
+        container.appendChild(downloadButton);
+
+        // "Zurücksetzen"-Button
+        const resetButton = document.createElement('button');
+        resetButton.textContent = 'Zurücksetzen';
+        styleButton(resetButton);
+        resetButton.addEventListener('click', () => {
+            localStorage.removeItem(localStorageKey);
+            localStorage.removeItem(isExportingKey);
+            pageData = [];
+            location.reload();
+        });
+        container.appendChild(resetButton);
+    }
+
+    // Funktion: Buttons einfügen
+    function addButtons() {
+        const container = document.createElement('div');
+        container.style.margin = '20px 0';
+        container.style.textAlign = 'center';
+
+        const h1 = document.querySelector('h1');
+        if (h1) {
+            h1.insertAdjacentElement('afterend', container);
+        } else {
+            document.body.insertBefore(container, document.body.firstChild); // Fallback: Buttons oben auf der Seite einfügen
+        }
+
+        if (localStorage.getItem(isExportingKey) === 'true') {
+            saveCurrentPageData();
+            updateButtons(container);
+        } else if (pageData.length === 0) {
+            // "Ab hier als CSV exportieren"-Button
+            const exportButton = document.createElement('button');
+            exportButton.textContent = 'Ab hier als CSV exportieren';
+            styleButton(exportButton);
+            exportButton.addEventListener('click', () => {
+                localStorage.setItem(isExportingKey, 'true');
+                saveCurrentPageData();
+                updateButtons(container);
+            });
+            container.appendChild(exportButton);
+        } else {
+            updateButtons(container);
+        }
+    }
+
+    // Funktion: Navigation tracken
+    function setupPageNavigationTracking() {
+        const links = document.querySelectorAll('th a[href*="&pos="]');
+        links.forEach((link) => {
+            link.addEventListener('click', () => {
+                localStorage.setItem(isExportingKey, 'true'); // Export-Modus aktivieren
+            });
+        });
+    }
+
+    // Initialisierung
+    addButtons();
+    //setupPageNavigationTracking();
+
+    // Beim Laden der Seite prüfen, ob Daten gespeichert werden sollen
+    if (localStorage.getItem(isExportingKey) === 'true') {
+        saveCurrentPageData();
+    }
+})();
