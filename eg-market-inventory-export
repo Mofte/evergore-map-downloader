@@ -1,6 +1,6 @@
 // ==UserScript==
-// @name         Evergore manueller Marktbestand CSV-Export
-// @version      0.1
+// @name         Evergore Marktbestand CSV-Export
+// @version      0.2
 // @description  Exportiert den Bestand des eigenen Marktstandes in eine CSV-Datei
 // @author       mofte
 // @match        https://evergore.de/lenoran?page=market_own*
@@ -58,7 +58,7 @@
                 const itemName = label.textContent.trim();
                 const priceMatch = content.innerHTML.match(/Unverbindlicher Preis: (\d+) Gold/);
                 const marketValueMatch = marketValue.innerHTML.match(/Marktwert: (\d+) Gold/);
-                const offerValue = inputValue.value.trim();
+                const offerValue = inputValue.value.trim().replace('.', ',');
 
                 const unverbindlicherPreis = priceMatch ? parseInt(priceMatch[1]) : null;
                 const marktwert = marketValueMatch ? parseInt(marketValueMatch[1]) : null;
@@ -79,7 +79,7 @@
                     articleName,
                     unverbindlicherPreis,
                     marktwert,
-                    parseFloat(offerValue)
+                    offerValue
                 ]);
             }
         });
@@ -101,7 +101,7 @@
             const csvRow = row.map(value => (value !== null ? `"${value}"` : '')).join(';');
             csvRows.push(csvRow);
         });
-        return csvRows.join('\n');
+        return '\uFEFF' + csvRows.join('\n'); // UTF-8 mit BOM für korrekte Darstellung von Umlauten
     }
 
     // Export-Prozess
